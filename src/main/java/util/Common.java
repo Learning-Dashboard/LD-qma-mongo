@@ -1,12 +1,8 @@
 package util;
 
 import DTOs.*;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.metrics.tophits.TopHits;
+import org.bson.Document;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,168 +11,168 @@ import java.util.Map;
 public class Common {
 
     /*
-    * NOTE: processMetricsBuckets, processFactorsBuckets and processStrategicIndicatorsBuckets are almost the same, but
-    * are separated as in the future there can be changes in the DTOs that require specific processing
-    * */
+    * NOTE: processMetricsBuckets, processFactorsBuckets and processStrategicIndicatorsBuckets are almost the same,
+    * but are separated as in the future there can be changes in the DTOs that require specific processing
+    */
 
-    public static List<MetricEvaluationDTO> processMetricsBuckets(Terms agg) {
+    public static List<MetricEvaluationDTO> processMetricsBuckets(List<Document> result) {
         List<MetricEvaluationDTO> ret = new ArrayList<>();
-
-        for (Terms.Bucket entry : agg.getBuckets()) {
-            String key = entry.getKey().toString();          // bucket key
-            long docCount = entry.getDocCount();            // Doc count
-            System.err.println("Key: " + key + ", Doc Count: " + docCount);
+        for (Document res : result) {
 
             MetricEvaluationDTO metricEval = new MetricEvaluationDTO();
             List<EvaluationDTO> evals = new ArrayList<>();
-            // We ask for top_hits for each bucket
-            TopHits topHits = entry.getAggregations().get("latest");
-            for (SearchHit hit : topHits.getHits().getHits()) {
-                System.err.println("ID: " + hit.getId() + ", Source: " + hit.getSourceAsString());
+            List<?> documentsList = (List<?>) res.get("documents");
 
-                Map<String, Object> result = hit.getSource();
+            for (Object docObject : documentsList) {
+                if (docObject instanceof Document) {
 
-                EvaluationDTO eval = new EvaluationDTO(
-                        hit.getId(),
-                        Queries.getStringFromMap(result, Constants.DATA_SOURCE),
-                        Queries.getStringFromMap(result, Constants.EVALUATION_DATE),
-                        Queries.getStringFromMap(result, Constants.VALUE),
-                        Queries.getStringFromMap(result, Constants.RATIONALE));
+                    Document doc = (Document) docObject;
+                    EvaluationDTO eval = new EvaluationDTO(
+                        Queries.getStringFromObject(doc.get("_id")),
+                        Queries.getStringFromObject(doc.get(Constants.DATA_SOURCE)),
+                        Queries.getStringFromObject(doc.get(Constants.EVALUATION_DATE)),
+                        Queries.getStringFromObject(doc.get(Constants.VALUE)),
+                        Queries.getStringFromObject(doc.get(Constants.RATIONALE))
+                    );
 
-                evals.add(eval);
+                    evals.add(eval);
+                    metricEval.setID(Queries.getStringFromObject(doc.get(Constants.METRIC_ID)));
+                    metricEval.setName(Queries.getStringFromObjectOrDefault(doc.get(Constants.NAME), metricEval.getID()));
+                    metricEval.setDescription(Queries.getStringFromObjectOrDefault(doc.get(Constants.DESCRIPTION), ""));
+                    metricEval.setProject(Queries.getStringFromObjectOrDefault(doc.get(Constants.PROJECT), ""));
+                    metricEval.setFactors(Queries.getArrayListFromObject(doc.get(Constants.ARRAY_FACTORS)));
 
-                metricEval.setID(Queries.getStringFromMap(result, Constants.METRIC_ID));
-                metricEval.setName(Queries.getStringFromMapOrDefault(result, Constants.NAME, metricEval.getID()));
-                metricEval.setDescription(Queries.getStringFromMap(result, Constants.DESCRIPTION));
-                metricEval.setProject(Queries.getStringFromMapOrDefault(result, Constants.PROJECT, ""));
-                metricEval.setFactors(Queries.getArrayListFromMap(result, Constants.ARRAY_FACTORS));
+                }
+                metricEval.setEvaluations(evals);
+                ret.add(metricEval);
             }
-            metricEval.setEvaluations(evals);
-            ret.add(metricEval);
-
-            System.err.println();
         }
         return ret;
     }
 
-    public static List<FactorEvaluationDTO> processFactorsBuckets(Terms agg) {
+    public static List<FactorEvaluationDTO> processFactorsBuckets(List<Document> result) {
         List<FactorEvaluationDTO> ret = new ArrayList<>();
-
-        for (Terms.Bucket entry : agg.getBuckets()) {
-            String key = entry.getKey().toString();          // bucket key
-            long docCount = entry.getDocCount();            // Doc count
-            System.err.println("Key: " + key + ", Doc Count: " + docCount);
+        for (Document res : result) {
 
             FactorEvaluationDTO factorEval = new FactorEvaluationDTO();
             List<EvaluationDTO> evals = new ArrayList<>();
-            // We ask for top_hits for each bucket
-            TopHits topHits = entry.getAggregations().get("latest");
-            for (SearchHit hit : topHits.getHits().getHits()) {
-                System.err.println("ID: " + hit.getId() + ", Source: " + hit.getSourceAsString());
+            List<?> documentsList = (List<?>) res.get("documents");
 
-                Map<String, Object> result = hit.getSource();
+            for (Object docObject : documentsList) {
+                if (docObject instanceof Document) {
 
-                EvaluationDTO eval = new EvaluationDTO(
-                        hit.getId(),
-                        Queries.getStringFromMap(result, Constants.DATA_SOURCE),
-                        Queries.getStringFromMap(result, Constants.EVALUATION_DATE),
-                        Queries.getStringFromMap(result, Constants.VALUE),
-                        Queries.getStringFromMap(result, Constants.RATIONALE));
-                // take mismatch days and missing elements from elasticsearch factors evaluations (if its provided by dashboard, qr-eval doesn't have this fields)
-                if (Queries.getIntFromMap(result, Constants.DATES_MISMATCH) != null)
-                    eval.setMismatchDays(Queries.getIntFromMap(result, Constants.DATES_MISMATCH));
-                if (Queries.getArrayListFromMap(result, Constants.MISSING_METRICS) != null)
-                    eval.setMissingElements(Queries.getArrayListFromMap(result, Constants.MISSING_METRICS));
+                    Document doc = (Document) docObject;
+                    EvaluationDTO eval = new EvaluationDTO(
+                        Queries.getStringFromObject(doc.get("_id")),
+                        Queries.getStringFromObject(doc.get(Constants.DATA_SOURCE)),
+                        Queries.getStringFromObject(doc.get(Constants.EVALUATION_DATE)),
+                        Queries.getStringFromObject(doc.get(Constants.VALUE)),
+                        Queries.getStringFromObject(doc.get(Constants.RATIONALE))
+                    );
 
-                evals.add(eval);
+                    if (Queries.getIntFromObject( doc.get(Constants.DATES_MISMATCH) ) != null)
+                        eval.setMismatchDays(Queries.getIntFromObject( doc.get(Constants.DATES_MISMATCH) ));
+                    if (Queries.getArrayListFromObject(doc.get(Constants.MISSING_METRICS)) != null)
+                        eval.setMissingElements(Queries.getArrayListFromObject( doc.get(Constants.MISSING_METRICS) ));
 
-                factorEval.setID(Queries.getStringFromMap(result, Constants.FACTOR_ID));
-                factorEval.setName(Queries.getStringFromMapOrDefault(result, Constants.NAME, factorEval.getID()));
-                factorEval.setDescription(Queries.getStringFromMapOrDefault(result, Constants.DESCRIPTION, ""));
-                factorEval.setProject(Queries.getStringFromMapOrDefault(result, Constants.PROJECT, ""));
-                factorEval.setStrategicIndicators(Queries.getArrayListFromMap(result, Constants.ARRAY_STRATEGIC_INDICATORS));
+                    evals.add(eval);
+                    factorEval.setID(Queries.getStringFromObject(doc.get(Constants.FACTOR_ID)));
+                    factorEval.setName(Queries.getStringFromObjectOrDefault(doc.get(Constants.NAME), factorEval.getID()));
+                    factorEval.setDescription(Queries.getStringFromObjectOrDefault(doc.get(Constants.DESCRIPTION), ""));
+                    factorEval.setProject(Queries.getStringFromObjectOrDefault(doc.get(Constants.PROJECT), ""));
+                    factorEval.setStrategicIndicators(Queries.getArrayListFromObject(doc.get(Constants.ARRAY_STRATEGIC_INDICATORS)));
+
+                }
+                factorEval.setEvaluations(evals);
+                ret.add(factorEval);
             }
-            factorEval.setEvaluations(evals);
-            ret.add(factorEval);
-
-            System.err.println();
         }
         return ret;
     }
 
-    public static List<StrategicIndicatorEvaluationDTO> processStrategicIndicatorsBuckets(Terms agg) {
+    public static List<StrategicIndicatorEvaluationDTO> processStrategicIndicatorsBuckets(List<Document> result) {
         List<StrategicIndicatorEvaluationDTO> ret = new ArrayList<>();
-
-        for (Terms.Bucket entry : agg.getBuckets()) {
-            String key = entry.getKey().toString();          // bucket key
-            long docCount = entry.getDocCount();            // Doc count
-            System.err.println("Key: " + key + ", Doc Count: " + docCount);
+        for (Document res : result) {
 
             StrategicIndicatorEvaluationDTO siEval = new StrategicIndicatorEvaluationDTO();
             List<EvaluationDTO> evals = new ArrayList<>();
             List<EstimationEvaluationDTO> estimations = new ArrayList<>();
-            // We ask for top_hits for each bucket
-            TopHits topHits = entry.getAggregations().get("latest");
-            for (SearchHit hit : topHits.getHits().getHits()) {
-                System.err.println("ID: " + hit.getId() + ", Source: " + hit.getSourceAsString());
+            List<?> documentsList = (List<?>) res.get("documents");
 
-                Map<String, Object> result = hit.getSource();
+            for (Object docObject : documentsList) {
+                if (docObject instanceof Document) {
 
-                EvaluationDTO eval = new EvaluationDTO(
-                        hit.getId(),
-                        Queries.getStringFromMap(result, Constants.DATA_SOURCE),
-                        Queries.getStringFromMap(result, Constants.EVALUATION_DATE),
-                        Queries.getStringFromMap(result, Constants.VALUE),
-                        Queries.getStringFromMap(result, Constants.RATIONALE)
-                        );
-                eval.setMismatchDays(Queries.getIntFromMap(result, Constants.DATES_MISMATCH));
-                eval.setMissingElements(Queries.getArrayListFromMap(result, Constants.MISSING_FACTORS));
+                    Document doc = (Document) docObject;
+                    EvaluationDTO eval = new EvaluationDTO(
+                        Queries.getStringFromObject(doc.get("_id")),
+                        Queries.getStringFromObject(doc.get(Constants.DATA_SOURCE)),
+                        Queries.getStringFromObject(doc.get(Constants.EVALUATION_DATE)),
+                        Queries.getStringFromObject(doc.get(Constants.VALUE)),
+                        Queries.getStringFromObject(doc.get(Constants.RATIONALE))
+                    );
 
-                evals.add(eval);
+                    if (Queries.getIntFromObject( doc.get(Constants.DATES_MISMATCH) ) != null)
+                        eval.setMismatchDays(Queries.getIntFromObject( doc.get(Constants.DATES_MISMATCH) ));
+                    if (Queries.getArrayListFromObject(doc.get(Constants.MISSING_FACTORS)) != null)
+                        eval.setMissingElements(Queries.getArrayListFromObject( doc.get(Constants.MISSING_FACTORS) ));
 
-                List<QuadrupletDTO<Integer, String, Float, Float>> estimation = new ArrayList<>();
+                    evals.add(eval);
+                    List<QuadrupletDTO<Integer, String, Float, Float>> estimation = new ArrayList<>();
+                    ArrayList<Object> allEstimations = Queries.getArrayListFromObject( doc.get(Constants.ESTIMATION) );
 
-                ArrayList allEstimations = Queries.getArrayListFromMap(result, Constants.ESTIMATION);
-                if (allEstimations != null) {
-                    for (Object e : allEstimations) {
-                        Float upperThreshold;
-                        try {
-                            upperThreshold = Queries.getFloatFromMap((Map<String, Object>) e, Constants.ESTIMATION_UPPER_THRESHOLD);
+                    if (allEstimations != null) {
+                        for (Object e : allEstimations) {
+                            if (e instanceof Document) {
+
+                                Document docE = (Document) e;
+                                Float upperThreshold;
+                                try {
+                                    upperThreshold = Queries.getFloatFromObject(docE.get(Constants.ESTIMATION_UPPER_THRESHOLD));
+                                }
+                                catch (NumberFormatException nfe) {
+                                    upperThreshold = null;
+                                }
+
+                                estimation.add(new QuadrupletDTO<>(
+                                    Queries.getIntFromObject(docE.get(Constants.ESTIMATION_ID)),
+                                    Queries.getStringFromObject(docE.get(Constants.ESTIMATION_LABEL)),
+                                    Queries.getFloatFromObject(docE.get(Constants.ESTIMATION_VALUE)),
+                                    upperThreshold)
+                                );
+                            }
                         }
-                        catch (NumberFormatException nfe) {
-                            upperThreshold = null;
-                        }
-                        estimation.add(new QuadrupletDTO<Integer, String, Float, Float>(Queries.getIntFromMap((Map<String, Object>) e, Constants.ESTIMATION_ID), Queries.getStringFromMap((Map<String, Object>) e, Constants.ESTIMATION_LABEL), Queries.getFloatFromMap((Map<String, Object>) e, Constants.ESTIMATION_VALUE), upperThreshold));
+                        estimations.add(new EstimationEvaluationDTO(estimation));
                     }
-
-                    estimations.add(new EstimationEvaluationDTO(estimation));
-                } else estimations.add(null);
-                siEval.setID(Queries.getStringFromMap(result, Constants.STRATEGIC_INDICATOR_ID));
-                siEval.setName(Queries.getStringFromMapOrDefault(result, Constants.NAME, siEval.getID()));
-                siEval.setDescription(Queries.getStringFromMap(result, Constants.DESCRIPTION));
-                siEval.setProject(Queries.getStringFromMap(result, Constants.PROJECT));
+                    else estimations.add(null);
+                    siEval.setID(Queries.getStringFromObject(doc.get(Constants.STRATEGIC_INDICATOR_ID)));
+                    siEval.setName(Queries.getStringFromObjectOrDefault(doc.get(Constants.NAME), siEval.getID()));
+                    siEval.setDescription(Queries.getStringFromObjectOrDefault(doc.get(Constants.DESCRIPTION), ""));
+                    siEval.setProject(Queries.getStringFromObjectOrDefault(doc.get(Constants.PROJECT), ""));
+                }
             }
             siEval.setEvaluations(evals);
             siEval.setEstimation(estimations);
             ret.add(siEval);
-
-            System.err.println();
         }
         return ret;
     }
 
-    public static Map<String, String> getIDNames(String projectId, Constants.QMLevel QMLevel) throws IOException {
+    public static Map<String, String> getIDNames(String projectId, Constants.QMLevel QMLevel) {
         Map<String, String> IDNames = new HashMap<>();
-        SearchResponse sr = Queries.getLatest(projectId, QMLevel);
+        List<Document> response = Queries.getLatest(projectId, QMLevel);
 
-        Terms agg = sr.getAggregations().get("IDGroup");
-        for (Terms.Bucket entry : agg.getBuckets()) {
-            String key = entry.getKey().toString();          // bucket key
-            TopHits topHits = entry.getAggregations().get("latest");
-            for (SearchHit hit : topHits.getHits().getHits()) {
-                Map<String, Object> result = hit.getSource();
-                IDNames.putIfAbsent(key, Queries.getStringFromMap(result, "name"));
+        for (Document res : response) {
+            String key = Queries.getStringFromObject(res.get("_id"));
+            List<?> documentsList = (List<?>) res.get("documents");
+
+            for (Object docObject : documentsList) {
+                if (docObject instanceof Document) {
+                    Document doc = (Document) docObject;
+                    String name = Queries.getStringFromObject(doc.get("name"));
+                    IDNames.putIfAbsent(key, name);
+                }
             }
+
         }
         return IDNames;
     }

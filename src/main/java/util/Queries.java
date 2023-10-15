@@ -5,411 +5,370 @@ import DTOs.EvaluationDTO;
 import DTOs.FactorEvaluationDTO;
 import DTOs.MetricEvaluationDTO;
 import DTOs.QuadrupletDTO;
-import org.apache.http.HttpEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.nio.entity.NStringEntity;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.WildcardQueryBuilder;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
+import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.bulk.BulkWriteUpsert;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.*;
+import com.mongodb.client.result.UpdateResult;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
-import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static util.Constants.*;
 
 public class Queries {
+
     public static String getStringFromMap(Map<String, Object> map, String k) {
-        return String.valueOf(map.get(k));
+        return String.valueOf( map.get(k) );
     }
 
     public static ArrayList getArrayListFromMap(Map<String, Object> map, String k) {
-        return (ArrayList)map.get(k);
+        return (ArrayList) map.get(k);
     }
 
     public static Integer getIntFromMap(Map<String, Object> map, String k) {
-        return (Integer)map.get(k);
+        return (Integer) map.get(k);
     }
 
     public static Float getFloatFromMap(Map<String, Object> map, String k) {
-        System.out.println(map.get(k));
-        return Float.valueOf(String.valueOf(map.get(k)));
+        return Float.valueOf( String.valueOf( map.get(k) ) );
     }
 
+    public static String getStringFromObject(Object o) {
+        return String.valueOf(o);
+    }
+
+    public static ArrayList getArrayListFromObject(Object o) {
+        return (ArrayList) o;
+    }
+
+    public static Integer getIntFromObject(Object o) {
+        return (Integer) o;
+    }
+
+    public static Float getFloatFromObject(Object o) {
+        return Float.valueOf( String.valueOf(o) );
+    }
+
+
     public static String safeGetFromStringArray(String[] array, int index) {
-        if (array != null && (index >= 0) && (index < array.length)) {
-            return array[index];
-        }
-        return "";
+        if (array != null && (index >= 0) && (index < array.length)) return array[index];
+        else return "";
     }
 
     public static double safeGetFromDoubleArray(double[] array, int index) {
-        if ((index >= 0) && (index < array.length)) {
-            return array[index];
-        }
-        return 0d;
+        if ((index >= 0) && (index < array.length)) return array[index];
+        else return 0d;
     }
 
     public static String getStringFromMapOrDefault(Map<String, Object> map, String k, String def) {
-        String valueOfmap = String.valueOf(map.get(k));
-        if (valueOfmap.equals("null")) {
-            return def;
-        } else {
-            return valueOfmap;
-        }
+        String valueOfMap = String.valueOf(map.get(k));
+        if (valueOfMap.equals("null")) return def;
+        else return valueOfMap;
+    }
+
+    public static String getStringFromObjectOrDefault(Object o, String def) {
+        String valueOfObject = String.valueOf(o);
+        if (o == null) return def;
+        else if (valueOfObject.equals("null")) return def;
+        else if (valueOfObject.isEmpty()) return def;
+        else return valueOfObject;
     }
 
     public static String getStringFromStringMapOrDefault(Map<String, String> map, String k, String def) {
-        String valueOfmap = String.valueOf(map.get(k));
-        if (valueOfmap.equals("null")) {
-            return def;
-        } else {
-            return valueOfmap;
-        }
+        String valueOfMap = String.valueOf(map.get(k));
+        if (valueOfMap.equals("null")) return def;
+        else return valueOfMap;
     }
 
-    private static String getIndexPath(String element_index_name, String projectId) {
-        String index= PATH + INDEX_PREFIX + element_index_name;
-        if (projectId!=null && !projectId.isEmpty() && !projectId.equalsIgnoreCase("EMPTY")&&
-                !projectId.equalsIgnoreCase("\"\""))
-            index=index.concat("."+projectId);
+    private static String getIndexName(String elementIndexName, String projectID) {
+        String index = elementIndexName;
+        if (projectID != null && !projectID.isEmpty() &&
+            !projectID.equalsIgnoreCase("EMPTY") &&
+            !projectID.equalsIgnoreCase("\"\""))
+            index = index.concat("." + projectID);
         return index;
     }
+
     private static String getFactorsIndex(String projectId) {
-        return getIndexPath(INDEX_FACTORS, projectId);
+        return getIndexName(INDEX_FACTORS, projectId);
     }
 
     private static String getStrategicIndicatorsIndex(String projectId) {
-        return getIndexPath(INDEX_STRATEGIC_INDICATORS, projectId);
-    }
-    private static String getMetricsIndex(String projectId)
-    {
-        return getIndexPath(INDEX_METRICS, projectId);
-    }
-    private static String getRelationsIndex(String projectId)
-    {
-        return getIndexPath(INDEX_RELATIONS, projectId);
+        return getIndexName(INDEX_STRATEGIC_INDICATORS, projectId);
     }
 
-    public static SearchResponse getLatest(QMLevel QMLevel, String projectId, String parent) throws IOException {
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getIndex(projectId, QMLevel))
-                .source(new SearchSourceBuilder()
-                        .query(getLatestParentQueryBuilder(parent, QMLevel))
-                        .size(0)
-                        .aggregation(
-                                AggregationBuilders.terms("IDGroup").field(getIDtoGroup(QMLevel)).size(10000)
-                                        .subAggregation(
-                                                AggregationBuilders.topHits("latest")
-                                                        .sort(EVALUATION_DATE, SortOrder.DESC)
-                                                        .explain(true)
-                                                        .size(1)
-                                        )
-                        )
-                )
+    private static String getMetricsIndex(String projectId) {
+        return getIndexName(INDEX_METRICS, projectId);
+    }
 
+    private static String getRelationsIndex(String projectId) {
+        return getIndexName(INDEX_RELATIONS, projectId);
+    }
+
+    public static List<Document> getLatest(QMLevel QMLevel, String projectId, String parent) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+        Bson parentQuery = getLatestParentQueryBuilder(parent, QMLevel);
+
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(parentQuery),
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
+                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.limit(10000),
+                Aggregates.project(
+                    Projections.fields(
+                        Projections.computed( "documents",
+                        new Document( "$slice", Arrays.asList("$documents", 1) ) )
+                    )
+                ),
+                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
         );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
     }
 
-    public static SearchResponse getLatest(String projectId, QMLevel QMLevel) throws IOException {
+    public static List<Document> getLatest(String projectId, QMLevel QMLevel) {
         return getLatest(QMLevel, projectId,"all");
     }
 
-    public static SearchResponse getLatestElement(String projectId, QMLevel qmLevel, String elementId) throws IOException {
-        String group = getIDtoGroup(qmLevel);
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getIndex(projectId, qmLevel))
-                .source(new SearchSourceBuilder()
-                        .query(QueryBuilders.matchQuery(group, elementId))
-                        .size(0)
-                        .aggregation(
-                                AggregationBuilders.terms("IDGroup").field(group).size(10000)
-                                        .subAggregation(
-                                                AggregationBuilders.topHits("latest")
-                                                        .sort(EVALUATION_DATE, SortOrder.DESC)
-                                                        .explain(true)
-                                                        .size(1)
-                                        )
-                        )
-                )
+    public static List<Document> getLatestElement(String projectId, QMLevel QMLevel, String elementId) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+        String group = getIDtoGroup(QMLevel);
 
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq(group, elementId)),
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
+                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.limit(10000),
+                Aggregates.project(
+                        Projections.fields(
+                                Projections.computed( "documents",
+                                        new Document( "$slice", Arrays.asList("$documents", 1) ) )
+                        )
+                ),
+                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
         );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
     }
 
     private static String getIndex(String projectId, QMLevel QMLevel) {
-        String index="";
+        String index = "";
         switch (QMLevel) {
             case strategic_indicators:
-                index = getStrategicIndicatorsIndex(projectId);break;
+                index = getStrategicIndicatorsIndex(projectId);
+                break;
             case factors:
-                index = getFactorsIndex(projectId);break;
+                index = getFactorsIndex(projectId);
+                break;
             case metrics:
-                index = getMetricsIndex(projectId);break;
+                index = getMetricsIndex(projectId);
+                break;
             case relations:
-                index = getRelationsIndex(projectId);break;
+                index = getRelationsIndex(projectId);
+                break;
         }
-//        System.out.println("GET INDEX: " + index);
         return index;
     }
 
-    // These two functions could be transformed into two Hashmaps
     private static String getIDtoGroup(QMLevel QMLevel) {
-        String group;
+        String group = "";
         switch (QMLevel) {
             case strategic_indicators:
-                group = STRATEGIC_INDICATOR_ID;break;
+                group = STRATEGIC_INDICATOR_ID;
+                break;
             case factors:
-                group = FACTOR_ID; break;
+                group = FACTOR_ID;
+                break;
             case metrics:
-                group = METRIC_ID; break;
-            default:
-                group="";
+                group = METRIC_ID;
+                break;
         }
-        System.out.println("IDto GROUP: " + group);
         return group;
     }
 
 
-    // parent means that you are searching elements that are related to other, e.g. the factors for a specific SI
-    private static QueryBuilder getLatestParentQueryBuilder(String parent, QMLevel QMLevel) {
-        QueryBuilder query=null;
-
-        if (parent.equals("all")) {
-            query = QueryBuilders.matchAllQuery();
-        }
+    // Parent means you are searching for elements related to others, e.g. the factors for a specific SI
+    private static Bson getLatestParentQueryBuilder(String parent, QMLevel QMLevel) {
+        Bson query;
+        if (parent.equals("all")) query = new Document();
         else {
-            if (QMLevel==Constants.QMLevel.metrics) {
-                query = QueryBuilders
-                        .boolQuery()
-                        .must(new WildcardQueryBuilder(ARRAY_FACTORS, parent + "*"));
-            }
-            else {
-                // The strategic indicators in the factors index contains the evaluation date --> we need to use wildcards
-                query = QueryBuilders.
-                        boolQuery()
-                        .must( new WildcardQueryBuilder(ARRAY_STRATEGIC_INDICATORS, parent + "*"));
-            }
+            if (QMLevel == Constants.QMLevel.metrics) query = Filters.elemMatch(ARRAY_FACTORS, Filters.eq(parent));
+            else query = Filters.elemMatch(ARRAY_STRATEGIC_INDICATORS, Filters.eq(parent));
         }
         return query;
     }
 
-    private static QueryBuilder getRangedParentQueryBuilder(String parent, QMLevel QMLevel,
-                                                            LocalDate dateFrom, LocalDate dateTo) {
-        String from, to;
-        from = FormattedDates.formatDate(dateFrom);
-        to = FormattedDates.formatDate(dateTo);
+    private static Bson getRangedParentQueryBuilder(String parent, QMLevel QMLevel, LocalDate dateFrom, LocalDate dateTo) {
+        String from = FormattedDates.formatDate(dateFrom);
+        String to = FormattedDates.formatDate(dateTo);
+        List<Bson> andFilters = new ArrayList<>();
 
-        QueryBuilder query=null;
-        if (parent.equals("all")) {
-            query = QueryBuilders
-                    .rangeQuery(EVALUATION_DATE)
-                    .gte(from)
-                    .lte(to);
-        }
-        else  {
-            if (QMLevel==Constants.QMLevel.metrics) {
-                query = QueryBuilders
-                        .boolQuery()
-                        .must(new WildcardQueryBuilder(ARRAY_FACTORS, parent + "*"))
-                        .filter(QueryBuilders
-                                .rangeQuery(EVALUATION_DATE)
-                                .gte(from)
-                                .lte(to));
-            }
-            else {
-                query = QueryBuilders
-                        .boolQuery()
-                        .must(new WildcardQueryBuilder(ARRAY_STRATEGIC_INDICATORS, parent + "*"))
-                        .filter(QueryBuilders
-                                .rangeQuery(EVALUATION_DATE)
-                                .gte(from)
-                                .lte(to));
-            }
-            return query;
-        }
-        return query;
-    }
-
-    public static SearchResponse getRanged(QMLevel QMLevel, String projectId , String parent,
-                                           LocalDate dateFrom, LocalDate dateTo) throws IOException {
-
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getIndex(projectId, QMLevel))
-                .searchType(SearchType.QUERY_THEN_FETCH)
-                .source(
-                        new SearchSourceBuilder()
-                                .size(0)
-                                .query(getRangedParentQueryBuilder(parent, QMLevel, dateFrom, dateTo))
-                                .aggregation(
-                                        AggregationBuilders.terms("IDGroup").field(getIDtoGroup(QMLevel)).size(10000)
-                                                .subAggregation(
-                                                        AggregationBuilders.topHits("latest")
-                                                                .sort(EVALUATION_DATE, SortOrder.ASC)
-                                                                .explain(true)
-                                                                .size(10000)
-                                                )
-                                )
-                )
+        Bson dateRangeFilter = Filters.and (
+                Filters.gte(EVALUATION_DATE, from),
+                Filters.lte(EVALUATION_DATE, to)
         );
+
+        if (parent.equals("all")) andFilters.add(dateRangeFilter);
+        else {
+            if (QMLevel == Constants.QMLevel.metrics) {
+                Bson factorsFilter = Filters.elemMatch(ARRAY_FACTORS, Filters.eq(parent));
+                andFilters.add(factorsFilter);
+                andFilters.add(dateRangeFilter);
+            }
+            else {
+                Bson strategicIndicatorsFilter = Filters.elemMatch(ARRAY_STRATEGIC_INDICATORS, Filters.eq(parent));
+                andFilters.add(strategicIndicatorsFilter);
+                andFilters.add(dateRangeFilter);
+            }
+        }
+
+        return Filters.and(andFilters);
     }
 
-    public static SearchResponse getRanged(QMLevel QMLevel, String projectId, LocalDate dateFrom, LocalDate dateTo)
-            throws IOException {
+    public static List<Document> getRanged(QMLevel QMLevel, String projectId , String parent, LocalDate dateFrom, LocalDate dateTo) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(getRangedParentQueryBuilder(parent, QMLevel, dateFrom, dateTo)),
+                Aggregates.sort(Sorts.ascending(EVALUATION_DATE)),
+                Aggregates.group("$" + getIDtoGroup(QMLevel), Accumulators.push("documents", "$$ROOT")),
+                Aggregates.limit(10000),
+                Aggregates.project(
+                    Projections.fields(
+                        Projections.computed( "documents",
+                            new Document( "$slice", Arrays.asList("$documents", 10000) ) )
+                    )
+                ),
+                Aggregates.sort(Sorts.ascending("documents." + getIDtoGroup(QMLevel)))
+        );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        //for (Document document : result) System.out.println(document);
+        return result;
+    }
+
+    public static List<Document> getRanged(QMLevel QMLevel, String projectId, LocalDate dateFrom, LocalDate dateTo) {
         return getRanged(QMLevel, projectId,"all", dateFrom, dateTo);
     }
 
-    public static SearchResponse getRangedElement(String projectId, QMLevel qmLevel, String elementId, LocalDate from, LocalDate to) throws IOException {
-        String group = getIDtoGroup(qmLevel);
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getIndex(projectId, qmLevel))
-                .source(new SearchSourceBuilder()
-                        .query(QueryBuilders
-                                .boolQuery()
-                                .must(new TermQueryBuilder(group, elementId))
-                                .filter(QueryBuilders
-                                        .rangeQuery(EVALUATION_DATE)
-                                        .gte(from)
-                                        .lte(to)))
-                        .size(0)
-                        .aggregation(
-                                AggregationBuilders.terms("IDGroup").field(group).size(10000)
-                                        .subAggregation(
-                                                AggregationBuilders.topHits("latest")
-                                                        .sort(EVALUATION_DATE, SortOrder.DESC)
-                                                        .explain(true)
-                                                        .size(10000)
-                                        )
-                        )
-                )
+    public static List<Document> getRangedElement(String projectId, QMLevel QMLevel, String elementId, LocalDate from, LocalDate to) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+        String group = getIDtoGroup(QMLevel);
 
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq(group, elementId)),
+                Aggregates.match(Filters.gte(EVALUATION_DATE, from)),
+                Aggregates.match(Filters.lte(EVALUATION_DATE, to)),
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
+                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.limit(10000),
+                Aggregates.project(
+                    Projections.fields(
+                        Projections.computed( "documents",
+                            new Document( "$slice", Arrays.asList("$documents", 10000) ) )
+                    )
+                ),
+                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
         );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
     }
 
-    public static SearchResponse getRelations(LocalDate dateFrom, LocalDate dateTo, String projectId) throws IOException {
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getRelationsIndex(projectId))
-                .source(new SearchSourceBuilder()
-                        .query(QueryBuilders.rangeQuery(EVALUATION_DATE)
-                                .gte(dateFrom)
-                                .lte(dateTo))
-                .size(1000)
-                .sort(EVALUATION_DATE, SortOrder.DESC))
+    public static List<Document> getRelations(LocalDate dateFrom, LocalDate dateTo, String projectId) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
+
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.gte(EVALUATION_DATE, dateFrom)),
+                Aggregates.match(Filters.lte(EVALUATION_DATE, dateTo)),
+                Aggregates.limit(1000),
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE))
         );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
     }
 
-    public static SearchResponse getLatestRelationsDate(String projectId) throws IOException {
-        RestHighLevelClient client = Connection.getConnectionClient();
-        return client.search(new SearchRequest(getRelationsIndex(projectId))
-                .source(new SearchSourceBuilder()
-                        .query(QueryBuilders.matchAllQuery())
-                        .size(1)
-                        .sort(EVALUATION_DATE, SortOrder.DESC))
+    public static List<Document> getLatestRelationsDate(String projectId) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
+
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(new Document()),
+                Aggregates.limit(1),
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE))
         );
+
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
     }
 
-    public static UpdateResponse setStrategicIndicatorValue(QMLevel QMLevel,
-                                                            String hardID,
-                                                            String projectId,
-                                                            String strategicIndicatorID,
-                                                            String strategicIndicatorName,
-                                                            String strategicIndicatorDescription,
-                                                            LocalDate evaluationDate,
-                                                            Float value,
-                                                            String info,
-                                                            EstimationEvaluationDTO estimation,
-                                                            List<String> missingFactors,
-                                                            long datesMismatch)
-            throws IOException {
+    public static UpdateResult setStrategicIndicatorValue(QMLevel QMLevel,
+                                                          String hardID,
+                                                          String projectId,
+                                                          String strategicIndicatorID,
+                                                          String strategicIndicatorName,
+                                                          String strategicIndicatorDescription,
+                                                          LocalDate evaluationDate,
+                                                          Float value,
+                                                          String info,
+                                                          EstimationEvaluationDTO estimation,
+                                                          List<String> missingFactors,
+                                                          long datesMismatch) {
 
-        XContentBuilder indexReqObj = jsonBuilder()
-                .startObject()
-                .field(PROJECT, projectId)
-                .field(STRATEGIC_INDICATOR_ID, strategicIndicatorID)
-                .field(EVALUATION_DATE, evaluationDate)
-                .field(DATA_SOURCE, "QRapids Dashboard");
-                //.field(NAME, strategicIndicatorName)
-                //.field(DESCRIPTION, strategicIndicatorDescription);
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+        List<Document> estimationArray;
 
-        // If the entry already exists, we update the information about the assessment
-        XContentBuilder updateReqObj = jsonBuilder().startObject();
-
-        updateReqObj.field(NAME, strategicIndicatorName);
-        indexReqObj.field(NAME, strategicIndicatorName);
-        updateReqObj.field(DESCRIPTION, strategicIndicatorDescription);
-        indexReqObj.field(DESCRIPTION, strategicIndicatorDescription);
-
-        updateReqObj.field(VALUE, value);
-        indexReqObj.field(VALUE, value);
-        updateReqObj.field(RATIONALE, info);
-        indexReqObj.field(RATIONALE, info);
-        updateReqObj.field(MISSING_FACTORS, missingFactors);
-        indexReqObj.field(MISSING_FACTORS, missingFactors);
-        updateReqObj.field(DATES_MISMATCH, datesMismatch);
-        indexReqObj.field(DATES_MISMATCH, datesMismatch);
-
-        if (estimation != null) {
-            updateReqObj.startArray(ESTIMATION);
-            indexReqObj.startArray(ESTIMATION);
+        if (estimation == null || estimation.getEstimation() == null) estimationArray = new ArrayList<>();
+        else {
+            estimationArray = new ArrayList<>();
             for (QuadrupletDTO<Integer, String, Float, Float> e : estimation.getEstimation()) {
-                indexReqObj.startObject();
-                updateReqObj.startObject();
-                indexReqObj.field(ESTIMATION_ID, e.getFirst());
-                updateReqObj.field(ESTIMATION_ID, e.getFirst());
-                indexReqObj.field(ESTIMATION_LABEL, e.getSecond());
-                updateReqObj.field(ESTIMATION_LABEL, e.getSecond());
-                indexReqObj.field(ESTIMATION_VALUE, e.getThird());
-                updateReqObj.field(ESTIMATION_VALUE, e.getThird());
-                indexReqObj.field(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
-                updateReqObj.field(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
-                indexReqObj.endObject();
-                updateReqObj.endObject();
+                Document estimationDoc = new Document()
+                    .append(ESTIMATION_ID, e.getFirst())
+                    .append(ESTIMATION_LABEL, e.getSecond())
+                    .append(ESTIMATION_VALUE, e.getThird())
+                    .append(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
+                estimationArray.add(estimationDoc);
             }
-            updateReqObj.endArray();
-            indexReqObj.endArray();
         }
-        updateReqObj.endObject();
-        indexReqObj.endObject();
 
-        RestHighLevelClient client = Connection.getConnectionClient();
-        IndexRequest indexRequest = new IndexRequest(getIndex(projectId, QMLevel),
-                                                    INDEX_STRATEGIC_INDICATORS,
-                                                    hardID)
-                .source(indexReqObj);
+        Document updateDoc = new Document("$set", new Document()
+            .append("_id", hardID)
+            .append(PROJECT, projectId)
+            .append(STRATEGIC_INDICATOR_ID, strategicIndicatorID)
+            .append(EVALUATION_DATE, evaluationDate)
+            .append(DATA_SOURCE, "QRapids Dashboard")
+            .append(NAME, strategicIndicatorName)
+            .append(DESCRIPTION, strategicIndicatorDescription)
+            .append(VALUE, value)
+            .append(RATIONALE, info)
+            .append(MISSING_FACTORS, missingFactors)
+            .append(DATES_MISMATCH, datesMismatch)
+            .append(ESTIMATION, estimationArray));
 
-        UpdateRequest updateRequest = new UpdateRequest(getIndex(projectId, QMLevel),
-                                                        INDEX_STRATEGIC_INDICATORS,
-                                                        hardID)
-                .doc(updateReqObj)
-                .upsert(indexRequest);
-        // wait for ElasticSearch to finish updating it's index
-        updateRequest.setRefreshPolicy("wait_for");
-        return client.update(updateRequest);
+        Document filter = new Document("_id", hardID);
+        UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+        return collection.updateOne(filter, updateDoc, updateOptions);
     }
 
-    public static UpdateResponse setFactorValue(QMLevel QMLevel,
+    public static UpdateResult setFactorValue  (QMLevel QMLevel,
                                                 String hardID,
                                                 String projectId,
                                                 String factorID,
@@ -421,325 +380,262 @@ public class Queries {
                                                 EstimationEvaluationDTO estimation,
                                                 List<String> missingMetrics,
                                                 long datesMismatch,
-                                                List<String> indicators)
-            throws IOException {
+                                                List<String> indicators) {
 
-        XContentBuilder indexReqObj = jsonBuilder()
-                .startObject()
-                .field(PROJECT, projectId)
-                .field(FACTOR_ID, factorID)
-                .field(EVALUATION_DATE, evaluationDate)
-                .field(DATA_SOURCE, "QRapids Dashboard");
-                //.field(NAME, factorName)
-                //.field(DESCRIPTION, factorDescription);
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
+        List<Document> estimationArray;
 
-        // If the entry already exists, we update the information about the assessment
-        XContentBuilder updateReqObj = jsonBuilder().startObject();
-
-        updateReqObj.field(NAME, factorName);
-        indexReqObj.field(NAME, factorName);
-        updateReqObj.field(DESCRIPTION, factorDescription);
-        indexReqObj.field(DESCRIPTION, factorDescription);
-
-        updateReqObj.field(VALUE, value);
-        indexReqObj.field(VALUE, value);
-        updateReqObj.field(RATIONALE, info);
-        indexReqObj.field(RATIONALE, info);
-        updateReqObj.field(MISSING_METRICS, missingMetrics);
-        indexReqObj.field(MISSING_METRICS, missingMetrics);
-        updateReqObj.field(DATES_MISMATCH, datesMismatch);
-        indexReqObj.field(DATES_MISMATCH, datesMismatch);
-        updateReqObj.field(ARRAY_STRATEGIC_INDICATORS, indicators);
-        indexReqObj.field(ARRAY_STRATEGIC_INDICATORS, indicators);
-
-
-        if (estimation != null) {
-            updateReqObj.startArray(ESTIMATION);
-            indexReqObj.startArray(ESTIMATION);
+        if (estimation == null || estimation.getEstimation() == null) estimationArray = new ArrayList<>();
+        else {
+            estimationArray = new ArrayList<>();
             for (QuadrupletDTO<Integer, String, Float, Float> e : estimation.getEstimation()) {
-                indexReqObj.startObject();
-                updateReqObj.startObject();
-                indexReqObj.field(ESTIMATION_ID, e.getFirst());
-                updateReqObj.field(ESTIMATION_ID, e.getFirst());
-                indexReqObj.field(ESTIMATION_LABEL, e.getSecond());
-                updateReqObj.field(ESTIMATION_LABEL, e.getSecond());
-                indexReqObj.field(ESTIMATION_VALUE, e.getThird());
-                updateReqObj.field(ESTIMATION_VALUE, e.getThird());
-                indexReqObj.field(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
-                updateReqObj.field(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
-                indexReqObj.endObject();
-                updateReqObj.endObject();
+                Document estimationDoc = new Document()
+                    .append(ESTIMATION_ID, e.getFirst())
+                    .append(ESTIMATION_LABEL, e.getSecond())
+                    .append(ESTIMATION_VALUE, e.getThird())
+                    .append(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
+                estimationArray.add(estimationDoc);
             }
-            updateReqObj.endArray();
-            indexReqObj.endArray();
         }
-        updateReqObj.endObject();
-        indexReqObj.endObject();
 
-        RestHighLevelClient client = Connection.getConnectionClient();
-        IndexRequest indexRequest = new IndexRequest(getIndex(projectId, QMLevel),
-                INDEX_FACTORS,
-                hardID)
-                .source(indexReqObj);
+        Document updateDoc = new Document("$set", new Document()
+            .append("_id", hardID)
+            .append(PROJECT, projectId)
+            .append(FACTOR_ID, factorID)
+            .append(EVALUATION_DATE, evaluationDate)
+            .append(DATA_SOURCE, "QRapids Dashboard")
+            .append(NAME, factorName)
+            .append(DESCRIPTION, factorDescription)
+            .append(VALUE, value)
+            .append(RATIONALE, info)
+            .append(MISSING_METRICS, missingMetrics)
+            .append(DATES_MISMATCH, datesMismatch)
+            .append(ARRAY_STRATEGIC_INDICATORS, indicators)
+            .append(ESTIMATION, estimationArray));
 
-        UpdateRequest updateRequest = new UpdateRequest(getIndex(projectId, QMLevel),
-                INDEX_FACTORS,
-                hardID)
-                .doc(updateReqObj)
-                .upsert(indexRequest);
-        // wait for ElasticSearch to finish updating it's index
-        updateRequest.setRefreshPolicy("wait_for");
-        return client.update(updateRequest);
+        Document filter = new Document("_id", hardID);
+        UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+        return collection.updateOne(filter, updateDoc, updateOptions);
     }
 
-    // Funtion that updates the factors' index with the information of the strategic indicators using
+    // Function that updates the factors' index with the information of the strategic indicators using
     // a concrete factor evaluation. These entries already exist in the factors' index.
-    public static UpdateResponse setFactorStrategicIndicatorRelation(FactorEvaluationDTO factor)
-            throws IOException {
+    public static UpdateResult setFactorStrategicIndicatorRelation(FactorEvaluationDTO factor) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        String indexName = getIndex( factor.getProject(), QMLevel.factors );
+        MongoCollection<Document> collection = database.getCollection(indexName);
 
-        String index_name = getIndex(factor.getProject(), QMLevel.factors);
+        UpdateResult response = null;
+        int index = 0;
 
-        UpdateResponse response = new UpdateResponse();
-        RestHighLevelClient client = Connection.getConnectionClient();
+        if (!factor.getEvaluations().isEmpty()) {
+            for (EvaluationDTO eval : factor.getEvaluations()) {
+                String factorID = factor.getFactorEntryID(index++);
+                Document updateDoc = new Document("$set", new Document()
+                    .append(ARRAY_STRATEGIC_INDICATORS, factor.getStrategicIndicators()));
 
-        String factorID;
-        int index=0;
-
-        if (factor.getEvaluations().isEmpty()) {
-        }
-        else {
-            for (EvaluationDTO eval: factor.getEvaluations())
-            {
-                factorID = factor.getFactorEntryID(index++);
-
-                IndexRequest indexReq = new IndexRequest(
-                        index_name,
-                        FACTOR_TYPE,
-                        factorID)
-                        .source(jsonBuilder()
-                                .startObject()
-                                .endObject());
-
-                UpdateRequest updateReq = new UpdateRequest (
-                        index_name,
-                        FACTOR_TYPE,
-                        factorID)
-                        .doc(jsonBuilder()
-                                .startObject()
-//                                .array(Constants.ARRAY_STRATEGIC_INDICATORS, factor.getStrategicIndicators())
-                                .field(ARRAY_STRATEGIC_INDICATORS, factor.getStrategicIndicators())
-                                .endObject())
-                        .upsert(indexReq);
-                // wait for ElasticSearch to finish updating it's index
-                updateReq.setRefreshPolicy("wait_for");
-                response = client.update(updateReq);
+                Document filter = new Document("_id", factorID);
+                UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+                response = collection.updateOne(filter, updateDoc, updateOptions);
             }
-
         }
-
         return response;
     }
 
-    // Funtion that updates the metrics' index with the information of the quality factor using
+    // Function that updates the metrics' index with the information of the quality factor using
     // a concrete metric evaluation. These entries already exist in the metrics' index.
-    public static UpdateResponse setMetricQualityFactorRelation(MetricEvaluationDTO metric)
-            throws IOException {
+    public static UpdateResult setMetricQualityFactorRelation(MetricEvaluationDTO metric) {
+        String indexName = getIndex(metric.getProject(), QMLevel.metrics);
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection(indexName);
 
-        String index_name = getIndex(metric.getProject(), QMLevel.metrics);
+        UpdateResult response = null;
+        int index = 0;
 
-        UpdateResponse response = new UpdateResponse();
-        RestHighLevelClient client = Connection.getConnectionClient();
+        if (!metric.getEvaluations().isEmpty()) {
+            for (EvaluationDTO eval : metric.getEvaluations()) {
+                String metricID = metric.getMetricEntryID(index++);
+                Document updateDoc = new Document("$set", new Document()
+                    .append(ARRAY_FACTORS, metric.getFactors()));
 
-        String metricID;
-        int index=0;
-
-        if (metric.getEvaluations().isEmpty()) {
-        }
-        else {
-            for (EvaluationDTO eval: metric.getEvaluations())
-            {
-                metricID = metric.getMetricEntryID(index++);
-
-                IndexRequest indexReq = new IndexRequest(
-                        index_name,
-                        METRIC_TYPE,
-                        metricID)
-                        .source(jsonBuilder()
-                                .startObject()
-                                .endObject());
-
-                UpdateRequest updateReq = new UpdateRequest (
-                        index_name,
-                        METRIC_TYPE,
-                        metricID)
-                        .doc(jsonBuilder()
-                                .startObject()
-                                .field(ARRAY_FACTORS, metric.getFactors())
-                                .endObject())
-                        .upsert(indexReq);
-                // wait for ElasticSearch to finish updating it's index
-                updateReq.setRefreshPolicy("wait_for");
-                response = client.update(updateReq);
+                Document filter = new Document("_id", metricID);
+                UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+                response = collection.updateOne(filter, updateDoc, updateOptions);
             }
-
         }
-
         return response;
     }
 
     public static boolean setFactorSIRelationIndex(String projectID, String[] factorID, double[] weight,
                                                    double[] sourceValue, String[] sourceCategories,
                                                    String strategicIndicatorID, LocalDate evaluationDate,
-                                                   String targetValue) throws IOException {
+                                                   String targetValue) {
 
-        RestHighLevelClient client = Connection.getConnectionClient();
-        BulkRequest request = new BulkRequest();
+        BulkWriteOptions bulkWriteOptions = new BulkWriteOptions().ordered(false);
+        List<WriteModel<Document>> writes = new ArrayList<>();
+        String indexName = getRelationsIndex(projectID);
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection(indexName);
 
         for (int i = 0; i < factorID.length; i++) {
             String sourceID = String.join("-", projectID, factorID[i], evaluationDate.toString());
             String targetID = String.join("-", projectID, strategicIndicatorID, evaluationDate.toString());
             String relation = String.join("-", projectID, factorID[i]) + "->" +
-                    String.join("-", strategicIndicatorID, evaluationDate.toString());
+                String.join("-", strategicIndicatorID, evaluationDate.toString());
 
-            IndexRequest ir = buildBulkWriteRequest(projectID, evaluationDate, relation, false, sourceID, targetID,
-                    safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
-                    safeGetFromDoubleArray(weight, i), targetValue);
-            request.add(ir);
+            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate, relation, false, sourceID, targetID,
+                safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
+                safeGetFromDoubleArray(weight, i), targetValue);
+
+            Document filter = new Document("_id", relation);
+            UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+            UpdateOneModel<Document> updateOneModel = new UpdateOneModel<>(filter, updateDoc, updateOptions);
+            writes.add(updateOneModel);
         }
 
-        BulkResponse bulkresponse = client.bulk(request);
-        return !bulkresponse.hasFailures();
+        BulkWriteResult bulkWriteResult = collection.bulkWrite(writes, bulkWriteOptions);
+        for (BulkWriteUpsert upsert : bulkWriteResult.getUpserts())
+            System.out.println("Upserted document ID: " + upsert.getId());
+        return bulkWriteResult.wasAcknowledged() &&
+               bulkWriteResult.getMatchedCount() == bulkWriteResult.getInsertedCount();
     }
 
     public static boolean setMetricQFRelationIndex(String projectID, String[] metricID, double[] weight,
                                                    double[] sourceValue, String[] sourceCategories,
                                                    String qualityFactorID, LocalDate evaluationDate,
-                                                   String targetValue) throws IOException {
+                                                   String targetValue) {
 
-        RestHighLevelClient client = Connection.getConnectionClient();
-        BulkRequest request = new BulkRequest();
+        BulkWriteOptions bulkWriteOptions = new BulkWriteOptions().ordered(false);
+        List<WriteModel<Document>> writes = new ArrayList<>();
+        String indexName = getRelationsIndex(projectID);
+        MongoDatabase database = Connection.getMongoDatabase();
+        MongoCollection<Document> collection = database.getCollection(indexName);
 
         for (int i = 0; i < metricID.length; i++) {
             String sourceID = String.join("-", projectID, metricID[i], evaluationDate.toString());
             String targetID = String.join("-", projectID, qualityFactorID, evaluationDate.toString());
             String relation = String.join("-", projectID, metricID[i]) + "->" +
-                    String.join("-", qualityFactorID, evaluationDate.toString());
+                String.join("-", qualityFactorID, evaluationDate.toString());
 
-            IndexRequest ir = buildBulkWriteRequest(projectID, evaluationDate, relation, true, sourceID, targetID,
-                    safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
-                    safeGetFromDoubleArray(weight, i), targetValue);
-            request.add(ir);
+            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate, relation, true, sourceID, targetID,
+                safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
+                safeGetFromDoubleArray(weight, i), targetValue);
+
+            Document filter = new Document("_id", relation);
+            UpdateOptions updateOptions = new UpdateOptions().upsert(true);
+            UpdateOneModel<Document> updateOneModel = new UpdateOneModel<>(filter, updateDoc, updateOptions);
+            writes.add(updateOneModel);
         }
 
-        BulkResponse bulkresponse = client.bulk(request);
-        return !bulkresponse.hasFailures();
+        BulkWriteResult bulkWriteResult = collection.bulkWrite(writes, bulkWriteOptions);
+        for (BulkWriteUpsert upsert : bulkWriteResult.getUpserts())
+            System.out.println("Upserted document ID: " + upsert.getId());
+        return bulkWriteResult.wasAcknowledged() &&
+               bulkWriteResult.getMatchedCount() == bulkWriteResult.getInsertedCount();
     }
 
-    public static IndexRequest buildBulkWriteRequest(String projectID, LocalDate evaluationDate, String relation, Boolean metrics,
-                                                  String sourceID, String targetID, double value, String sourceCategory, double weight, String targetValue) throws IOException {
-        String sourceType = FACTOR_TYPE;
-        String targetType = STRATEGIC_INDICATOR_TYPE;
+    public static Document buildBulkWriteRequest(String projectID,
+                                                     LocalDate evaluationDate,
+                                                     String relation,
+                                                     Boolean metrics,
+                                                     String sourceID,
+                                                     String targetID,
+                                                     double value,
+                                                     String sourceCategory,
+                                                     double weight,
+                                                     String targetValue) {
+        String sourceType, targetType;
         if (metrics) {
             sourceType = METRIC_TYPE;
             targetType = FACTOR_TYPE;
         }
-        return new IndexRequest(getRelationsIndex(projectID), RELATIONS_TYPE, relation)
-                .source(jsonBuilder()
-                        .startObject()
-                        .field(EVALUATION_DATE, evaluationDate)
-                        .field(PROJECT, projectID)
-                        .field(RELATION, relation)
-                        .field(SOURCEID, sourceID)
-                        .field(SOURCETYPE, sourceType)
-                        .field(TARGETID, targetID)
-                        .field(TARGETTPYE, targetType)
-                        .field(VALUE, value)
-                        .field(WEIGHT, weight)                                // 0 IF SI IS BN
-                        .field(TARGETVALUE, targetValue)
-                        .field(SOURCELABEL, sourceCategory)                   // NULL IF SI IS NUMERIC
-                        .endObject());
+        else {
+            sourceType = FACTOR_TYPE;
+            targetType = STRATEGIC_INDICATOR_TYPE;
+        }
+
+        return new Document("$set", new Document()
+            .append(EVALUATION_DATE, evaluationDate)
+            .append(PROJECT, projectID)
+            .append(RELATION, relation)
+            .append(SOURCEID, sourceID)
+            .append(SOURCETYPE, sourceType)
+            .append(TARGETID, targetID)
+            .append(TARGETTPYE, targetType)
+            .append(VALUE, value)
+            .append(WEIGHT, weight)
+            .append(TARGETVALUE, targetValue)
+            .append(SOURCELABEL, sourceCategory));
     }
 
-    public static Response getIndexes() throws IOException {
-        RestClient client = Connection.getLowLevelConnectionClient();
-        Map<String, String> params = Collections.emptyMap();
-
-        String query = "/" + PATH +"_cat/indices?format=json";
-
-        System.out.println(query);
-        return client.performRequest("GET",query, params);
+    public static List<String> getCollections() {
+        MongoDatabase database = Connection.getMongoDatabase();
+        List<String> collectionNames = new ArrayList<>();
+        for (String name : database.listCollectionNames()) collectionNames.add(name);
+        return collectionNames;
     }
 
+	public static List<Document> getFactorMetricsRelations(String projectId, String evaluationDate) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        String indexName = INDEX_RELATIONS + "." + projectId;
+        MongoCollection<Document> collection = database.getCollection(indexName);
 
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq(PROJECT, projectId)),
+                Aggregates.match(Filters.eq(EVALUATION_DATE, evaluationDate)),
+                Aggregates.match(Filters.eq(TARGETTPYE, "factors")),
+                Aggregates.limit(1000)
+        );
 
-	public static SearchResponse getFactorMetricsRelations( String projectId, String evaluationDate ) throws IOException {
-		RestHighLevelClient client = Connection.getConnectionClient();
-
-		return client.search(
-			new SearchRequest( INDEX_RELATIONS + "." + projectId )
-				.source(
-					new SearchSourceBuilder()
-						.size(1000)
-	                	.query(
-                			boolQuery()
-                				.must( termQuery(PROJECT, projectId) )
-                				.must( termQuery(EVALUATION_DATE, evaluationDate) )
-                				.must( termQuery(TARGETTPYE, "factors") )
-	                	)
-
-	            )
-		);
-
+        List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
+        for (Document document : result) System.out.println(document.toJson());
+        return result;
 	}
 
-    public static boolean prepareSIIndex(String projectID) throws IOException {
-        RestClient lowLevelClient = Connection.getLowLevelConnectionClient();
-        String jsonMapping = STRATEGIC_INDICATORS_MAPPING;
-        String endpoint = "/" + getIndexPath(STRATEGIC_INDICATOR_TYPE, projectID);
-        HttpEntity entity = new NStringEntity(jsonMapping, ContentType.APPLICATION_JSON);
-        Response response = null;
-        try {
-            response = lowLevelClient.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                throw new ResponseException(response);
-            } else {
-                System.out.println("INDEX CREATED: " + endpoint);
+    public static boolean prepareSIIndex(String projectID) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        String collectionName = getIndexName(STRATEGIC_INDICATOR_TYPE, projectID);
+
+        if (database.listCollectionNames().into(new ArrayList<>()).contains(collectionName)) {
+            System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+            return false;
+        }
+
+        ValidationOptions validationOptions = new ValidationOptions().validator(STRATEGIC_INDICATORS_MAPPING);
+        CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
+        database.createCollection(collectionName, options);
+
+        for (String name : database.listCollectionNames())
+            if (name.equals(collectionName)) {
+                System.out.println("INDEX CREATED: " + collectionName);
                 return true;
             }
-        } catch (ResponseException e) {
-            if (e.getMessage().contains("already exists")) {
-                System.out.println("INDEX ALREADY EXISTS: " + endpoint);
-                return false;
-            } else {
-                throw e;
-            }
-        }
+        System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+        return false;
     }
 
-    public static boolean prepareQFIndex(String projectID) throws IOException {
-        RestClient lowLevelClient = Connection.getLowLevelConnectionClient();
-        String jsonMapping = FACTORS_MAPPING;
-        String endpoint = "/" + getIndexPath(FACTOR_TYPE, projectID);
-        HttpEntity entity = new NStringEntity(jsonMapping, ContentType.APPLICATION_JSON);
-        Response response = null;
-        try {
-            response = lowLevelClient.performRequest("PUT", endpoint, Collections.emptyMap(), entity);
-            if (response.getStatusLine().getStatusCode() != 200) {
-                throw new ResponseException(response);
-            } else {
-                System.out.println("INDEX CREATED: " + endpoint);
+    public static boolean prepareQFIndex(String projectID) {
+        MongoDatabase database = Connection.getMongoDatabase();
+        String collectionName = getIndexName(FACTOR_TYPE, projectID);
+
+        if (database.listCollectionNames().into(new ArrayList<>()).contains(collectionName)) {
+            System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+            return false;
+        }
+
+        ValidationOptions validationOptions = new ValidationOptions().validator(FACTORS_MAPPING);
+        CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
+        database.createCollection(collectionName, options);
+
+        for (String name : database.listCollectionNames())
+            if (name.equals(collectionName)) {
+                System.out.println("INDEX CREATED: " + collectionName);
                 return true;
             }
-        } catch (ResponseException e) {
-            if (e.getMessage().contains("already exists")) {
-                System.out.println("INDEX ALREADY EXISTS: " + endpoint);
-                return false;
-            } else {
-                throw e;
-            }
-        }
+        System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+        return false;
     }
-
 
 }
 

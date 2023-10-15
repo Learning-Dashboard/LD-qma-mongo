@@ -113,5 +113,17 @@ public class EvaluationDTO {
         this.missingElements = missingElements;
     }
 
+    @Override
+    public String toString() {
+        return "EvaluationDTO{" +
+                "ID='" + ID + '\'' +
+                ", datasource='" + datasource + '\'' +
+                ", evaluationDate=" + evaluationDate +
+                ", value=" + value +
+                ", rationale='" + rationale + '\'' +
+                ", mismatchDays=" + mismatchDays +
+                ", missingElements=" + missingElements +
+                '}';
+    }
 }
 
