@@ -27,11 +27,9 @@ public class Simulator {
 	*/
 	public static Model createModel( String projectId, String evaluationDate ) {
 		LocalDate localEvaluationDate = LocalDate.parse(evaluationDate, dtf);
-		LocalDate localEvaluationDate1 = LocalDate.parse("2023-10-13", dtf);
-		LocalDate localEvaluationDate2 = LocalDate.parse("2023-10-15", dtf);
 
-		List<MetricEvaluationDTO> metrics = Metric.getEvaluations( projectId, localEvaluationDate1, localEvaluationDate2 );
-		List<FactorEvaluationDTO> factors = Factor.getEvaluations( projectId, localEvaluationDate1, localEvaluationDate2 );
+		List<MetricEvaluationDTO> metrics = Metric.getEvaluations( projectId, localEvaluationDate, localEvaluationDate );
+		List<FactorEvaluationDTO> factors = Factor.getEvaluations( projectId, localEvaluationDate, localEvaluationDate );
 		List<Document> relations = Queries.getFactorMetricsRelations(  projectId, evaluationDate );
 
 		if ( metrics.size() == 0 )
@@ -40,7 +38,7 @@ public class Simulator {
 			throw new IllegalArgumentException("No factors found for projectId " + projectId + ", evaluationDate " + evaluationDate);
 		if ( relations.size()  == 0 )
 			throw new IllegalArgumentException("No relations found for projectId " + projectId + ", evaluationDate " + evaluationDate);
-		
+
 		return new Model(metrics, factors, relations);
 	}
 

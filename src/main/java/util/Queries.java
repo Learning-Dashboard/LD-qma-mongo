@@ -117,7 +117,7 @@ public class Queries {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(parentQuery),
                 Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
-                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.group("$" + getIDtoGroup(QMLevel), Accumulators.push("documents", "$$ROOT")),
                 Aggregates.limit(10000),
                 Aggregates.project(
                     Projections.fields(
@@ -125,7 +125,7 @@ public class Queries {
                         new Document( "$slice", Arrays.asList("$documents", 1) ) )
                     )
                 ),
-                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
+                Aggregates.sort(Sorts.ascending("documents." + getIDtoGroup(QMLevel)))
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
@@ -145,7 +145,7 @@ public class Queries {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.eq(group, elementId)),
                 Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
-                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.group("$" + group, Accumulators.push("documents", "$$ROOT")),
                 Aggregates.limit(10000),
                 Aggregates.project(
                         Projections.fields(
@@ -153,7 +153,7 @@ public class Queries {
                                         new Document( "$slice", Arrays.asList("$documents", 1) ) )
                         )
                 ),
-                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
+                Aggregates.sort(Sorts.ascending("documents." + group))
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
@@ -254,7 +254,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        //for (Document document : result) System.out.println(document);
+        for (Document document : result) System.out.println(document);
         return result;
     }
 
@@ -272,7 +272,7 @@ public class Queries {
                 Aggregates.match(Filters.gte(EVALUATION_DATE, from)),
                 Aggregates.match(Filters.lte(EVALUATION_DATE, to)),
                 Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
-                Aggregates.group("$" + QMLevel, Accumulators.push("documents", "$$ROOT")),
+                Aggregates.group("$" + group, Accumulators.push("documents", "$$ROOT")),
                 Aggregates.limit(10000),
                 Aggregates.project(
                     Projections.fields(
@@ -280,7 +280,7 @@ public class Queries {
                             new Document( "$slice", Arrays.asList("$documents", 10000) ) )
                     )
                 ),
-                Aggregates.sort(Sorts.ascending("documents." + QMLevel))
+                Aggregates.sort(Sorts.ascending("documents." + group))
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
@@ -589,7 +589,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
 	}
 

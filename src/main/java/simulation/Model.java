@@ -57,7 +57,7 @@ public class Model {
 			if (fedto.getEvaluations().size() > 0)
 				this.mapFactorIdDTO.put( fedto.getEvaluations().get(0).getID(), fedto );
 		}
-		
+
 		readRelations(relations);
 	}
 
@@ -112,12 +112,12 @@ public class Model {
 					metricValue = source.getEvaluations().get(0).getValue().doubleValue();
 				else metricValue = 0.0;
 				Double weight = impacts.get(factorId).get(sourceMetricId);
-				sumWeights+= weight;
-				sumValues+= metricValue * weight;
+				sumWeights += weight;
+				sumValues += metricValue * weight;
 			}
 			
 			FactorEvaluationDTO fedto = mapFactorIdDTO.get(factorId);
-			setEvaluationDTO( sumValues / sumWeights, fedto );
+			setEvaluationDTO(sumValues / sumWeights, fedto);
 		}
 		return mapFactorIdDTO.values();
 	}
@@ -146,7 +146,7 @@ public class Model {
 			Double weight = getWeight(doc.get("weight"));
 			relationMetricIdSet.add(metricId);
 			relationFactorIdSet.add(factorId);
-			
+
 			// Fill map influencedFactors: metricId -> Set<factorId>
 			if (influencedFactors.containsKey(metricId))
 				influencedFactors.get(metricId).add(factorId);
@@ -201,10 +201,10 @@ public class Model {
 
 	private void validate() {
 		
-		// Number of metrics/factors derived from relations are also delivered by Metric / Factor API
+		// Number of metrics / factors derived from relations are also delivered by Metric / Factor API
 		if ( relationMetricIdSet.size() != mapMetricIdDTO.size() )
 			log.warning( "metric count in relations: " + relationMetricIdSet.size() + ", in API: " + mapMetricIdDTO.size());
-		if ( relationFactorIdSet.size() != mapMetricIdDTO.size() )
+		if ( relationFactorIdSet.size() != mapFactorIdDTO.size() )
 			log.warning("factor count in relations: " + relationFactorIdSet.size() + ", in API: " + mapFactorIdDTO.size());
 		
 		// MetricId (source of a relation) is contained in mapMetricIdDTO
@@ -223,12 +223,14 @@ public class Model {
 
 
 	private void setEvaluationDTO(Double value, ElemenEvaluationtDTO elementEvaluationDTO) {
-		EvaluationDTO edto = elementEvaluationDTO.getEvaluations().get(0);
-		EvaluationDTO simulated = new EvaluationDTO(edto.getID(), edto.getDatasource(),
-			edto.getEvaluationDate(), value.floatValue(), edto.getRationale() );
-		List<EvaluationDTO> ledto = new ArrayList<>();
-		ledto.add(simulated);
-		elementEvaluationDTO.setEvaluations(ledto);
+		if (elementEvaluationDTO.getEvaluations().size() > 0) {
+			EvaluationDTO edto = elementEvaluationDTO.getEvaluations().get(0);
+			EvaluationDTO simulated = new EvaluationDTO(edto.getID(), edto.getDatasource(),
+				edto.getEvaluationDate(), value.floatValue(), edto.getRationale());
+			List<EvaluationDTO> ledto = new ArrayList<>();
+			ledto.add(simulated);
+			elementEvaluationDTO.setEvaluations(ledto);
+		}
 	}
 	
 }

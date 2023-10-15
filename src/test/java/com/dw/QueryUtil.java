@@ -18,8 +18,8 @@ import java.util.List;
 class QueryUtil {
 
     public static void main(String[] args) throws IOException {
-        LocalDate dateFrom = LocalDate.of(2018,12, 01);
-        LocalDate dateTo = LocalDate.of(2018, 03, 16);
+        LocalDate dateFrom = LocalDate.of(2023,10, 13);
+        LocalDate dateTo = LocalDate.of(2023, 10, 13);
         String projectId="test";
         String factorCQ = "codequality";
         String strategicIndicatorQ = "productquality";

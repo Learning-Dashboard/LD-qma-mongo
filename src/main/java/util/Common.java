@@ -17,7 +17,7 @@ public class Common {
 
     public static List<MetricEvaluationDTO> processMetricsBuckets(List<Document> result) {
         List<MetricEvaluationDTO> ret = new ArrayList<>();
-        for (Document res : result) {
+        for (Document res : result) { //Para cada métrica
 
             MetricEvaluationDTO metricEval = new MetricEvaluationDTO();
             List<EvaluationDTO> evals = new ArrayList<>();
@@ -43,9 +43,9 @@ public class Common {
                     metricEval.setFactors(Queries.getArrayListFromObject(doc.get(Constants.ARRAY_FACTORS)));
 
                 }
-                metricEval.setEvaluations(evals);
-                ret.add(metricEval);
             }
+            metricEval.setEvaluations(evals);
+            ret.add(metricEval);
         }
         return ret;
     }
@@ -83,9 +83,9 @@ public class Common {
                     factorEval.setStrategicIndicators(Queries.getArrayListFromObject(doc.get(Constants.ARRAY_STRATEGIC_INDICATORS)));
 
                 }
-                factorEval.setEvaluations(evals);
-                ret.add(factorEval);
             }
+            factorEval.setEvaluations(evals);
+            ret.add(factorEval);
         }
         return ret;
     }
