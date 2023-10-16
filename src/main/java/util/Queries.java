@@ -129,7 +129,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
     }
 
@@ -157,7 +157,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
     }
 
@@ -202,8 +202,8 @@ public class Queries {
         Bson query;
         if (parent.equals("all")) query = new Document();
         else {
-            if (QMLevel == Constants.QMLevel.metrics) query = Filters.elemMatch(ARRAY_FACTORS, Filters.eq(parent));
-            else query = Filters.elemMatch(ARRAY_STRATEGIC_INDICATORS, Filters.eq(parent));
+            if (QMLevel == Constants.QMLevel.metrics) query = Filters.in(ARRAY_FACTORS, parent);
+            else query = Filters.in(ARRAY_STRATEGIC_INDICATORS, parent);
         }
         return query;
     }
@@ -214,19 +214,19 @@ public class Queries {
         List<Bson> andFilters = new ArrayList<>();
 
         Bson dateRangeFilter = Filters.and (
-                Filters.gte(EVALUATION_DATE, from),
-                Filters.lte(EVALUATION_DATE, to)
+            Filters.gte(EVALUATION_DATE, from),
+            Filters.lte(EVALUATION_DATE, to)
         );
 
         if (parent.equals("all")) andFilters.add(dateRangeFilter);
         else {
             if (QMLevel == Constants.QMLevel.metrics) {
-                Bson factorsFilter = Filters.elemMatch(ARRAY_FACTORS, Filters.eq(parent));
+                Bson factorsFilter = Filters.in(ARRAY_FACTORS, parent);
                 andFilters.add(factorsFilter);
                 andFilters.add(dateRangeFilter);
             }
             else {
-                Bson strategicIndicatorsFilter = Filters.elemMatch(ARRAY_STRATEGIC_INDICATORS, Filters.eq(parent));
+                Bson strategicIndicatorsFilter = Filters.in(ARRAY_STRATEGIC_INDICATORS, parent);
                 andFilters.add(strategicIndicatorsFilter);
                 andFilters.add(dateRangeFilter);
             }
@@ -269,8 +269,8 @@ public class Queries {
 
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.eq(group, elementId)),
-                Aggregates.match(Filters.gte(EVALUATION_DATE, from)),
-                Aggregates.match(Filters.lte(EVALUATION_DATE, to)),
+                Aggregates.match(Filters.gte(EVALUATION_DATE, from.toString())),
+                Aggregates.match(Filters.lte(EVALUATION_DATE, to.toString())),
                 Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
                 Aggregates.group("$" + group, Accumulators.push("documents", "$$ROOT")),
                 Aggregates.limit(10000),
@@ -284,7 +284,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
     }
 
@@ -293,14 +293,14 @@ public class Queries {
         MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
 
         List<Bson> pipeline = Arrays.asList(
-                Aggregates.match(Filters.gte(EVALUATION_DATE, dateFrom)),
-                Aggregates.match(Filters.lte(EVALUATION_DATE, dateTo)),
+                Aggregates.match(Filters.gte(EVALUATION_DATE, dateFrom.toString())),
+                Aggregates.match(Filters.lte(EVALUATION_DATE, dateTo.toString())),
                 Aggregates.limit(1000),
                 Aggregates.sort(Sorts.descending(EVALUATION_DATE))
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
     }
 
@@ -315,7 +315,7 @@ public class Queries {
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
-        for (Document document : result) System.out.println(document.toJson());
+        for (Document document : result) System.out.println(document);
         return result;
     }
 

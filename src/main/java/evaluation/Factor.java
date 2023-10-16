@@ -62,7 +62,7 @@ public class Factor {
     */
     public static List<FactorEvaluationDTO> getEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<FactorEvaluationDTO> ret;
-        List<Document> sr = Queries.getRanged(Constants.QMLevel.factors, projectId,from , to);
+        List<Document> sr = Queries.getRanged(Constants.QMLevel.factors, projectId, from, to);
         ret = Common.processFactorsBuckets(sr);
         return ret;
     }
@@ -144,7 +144,7 @@ public class Factor {
         List<FactorMetricEvaluationDTO> ret = new ArrayList<>();
         Map<String, String> IDNames = getFactorsIDNames(projectId);
         for (String factorID : IDNames.keySet()) {
-            FactorMetricEvaluationDTO factorMetrics = getMetricsEvaluations(projectId,factorID);
+            FactorMetricEvaluationDTO factorMetrics = getMetricsEvaluations(projectId, factorID);
             ret.add(factorMetrics);
         }
         resetFactorsIDNames();

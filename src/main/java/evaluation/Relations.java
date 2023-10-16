@@ -41,7 +41,7 @@ public class Relations {
         List<Document> responseRelations = Queries.getRelations(dateFrom, dateTo, projectID);
         Map<String, Boolean> processedElements = new HashMap<>();
 
-        for (Document doc : responseRelations) {
+        for (Document doc : responseRelations) { // Results come sorted by date
             String sourceID = getRelationLabel(Queries.getStringFromObjectOrDefault(doc.get(Constants.SOURCEID), ""));
             String targetID = getRelationLabel(Queries.getStringFromObjectOrDefault(doc.get(Constants.TARGETID), ""));
             String sourceTargetKey = sourceID+"->"+targetID;
