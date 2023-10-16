@@ -20,7 +20,6 @@ class QueryUtil {
     public static void main(String[] args) throws IOException {
         LocalDate dateFrom = LocalDate.of(2023,10, 13);
         LocalDate dateTo = LocalDate.of(2023, 10, 15);
-        LocalDate date = LocalDate.of(2023, 07, 22);
         String projectId="test";
         String factorCQ = "fB";
         String strategicIndicatorQ = "sA";
@@ -36,6 +35,7 @@ class QueryUtil {
         System.err.println("----- QUERY TEST UTIL -----");
         try {
             //OPEN CONNECTION
+            System.err.println("-- OPEN CONNECTION");
             Connection.initConnection(ip, port, database, username, password);
 
             // RELATIONS
@@ -43,13 +43,13 @@ class QueryUtil {
             double[] sourceValues = {0.8d, 0.2d};
             double[] weights = {0.7d, 0.3d};
             Relations.setStrategicIndicatorFactorRelation(projectId, factorsID, strategicIndicatorQ, dateFrom,
-                    weights, sourceValues, null, "0.80");
+                weights, sourceValues, null, "0.80");
 
             String[] factorsID2 = {"runtimeErrors", "avrResponseTime"};
             double[] sourceValues2 = {0.5d, 0.1d};
             String[] sourceCategories = {"Medium", "Low"};
             Relations.setStrategicIndicatorFactorRelation(projectId, factorsID2,"HWReliability",
-                    dateFrom, new double[]{0d}, sourceValues2, sourceCategories, "High");
+                dateFrom, new double[]{0d}, sourceValues2, sourceCategories, "High");
 
             // GET
             ArrayList<RelationDTO> relations = Relations.getRelations("test", dateFrom);

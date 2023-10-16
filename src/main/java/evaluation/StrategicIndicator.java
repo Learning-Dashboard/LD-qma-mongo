@@ -134,7 +134,7 @@ public class StrategicIndicator {
             StrategicIndicatorFactorEvaluationDTO indicatorFactors = getFactorsEvaluations(projectId, indicatorID);
             ret.add(indicatorFactors);
         }
-        resetFactorsIDNames();
+        resetIndicatorsIDNames();
         return ret;
     }
 
@@ -157,7 +157,7 @@ public class StrategicIndicator {
             StrategicIndicatorFactorEvaluationDTO indicatorFactors = getFactorsEvaluations(projectId, indicatorID, from, to);
             ret.add(indicatorFactors);
         }
-        resetFactorsIDNames();
+        resetIndicatorsIDNames();
         return ret;
     }
 
@@ -251,7 +251,7 @@ public class StrategicIndicator {
         return IDNames;
     }
 
-    public static void resetFactorsIDNames() {
+    public static void resetIndicatorsIDNames() {
         IDNames = null;
     }
 

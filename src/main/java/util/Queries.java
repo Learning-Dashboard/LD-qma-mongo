@@ -14,6 +14,8 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.io.IOException;
+import java.sql.Array;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -53,7 +55,6 @@ public class Queries {
         return Float.valueOf( String.valueOf(o) );
     }
 
-
     public static String safeGetFromStringArray(String[] array, int index) {
         if (array != null && (index >= 0) && (index < array.length)) return array[index];
         else return "";
@@ -61,7 +62,7 @@ public class Queries {
 
     public static double safeGetFromDoubleArray(double[] array, int index) {
         if ((index >= 0) && (index < array.length)) return array[index];
-        else return 0d;
+        else return 0;
     }
 
     public static String getStringFromMapOrDefault(Map<String, Object> map, String k, String def) {
@@ -196,7 +197,6 @@ public class Queries {
         return group;
     }
 
-
     // Parent means you are searching for elements related to others, e.g. the factors for a specific SI
     private static Bson getLatestParentQueryBuilder(String parent, QMLevel QMLevel) {
         Bson query;
@@ -295,8 +295,8 @@ public class Queries {
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(Filters.gte(EVALUATION_DATE, dateFrom.toString())),
                 Aggregates.match(Filters.lte(EVALUATION_DATE, dateTo.toString())),
-                Aggregates.limit(1000),
-                Aggregates.sort(Sorts.descending(EVALUATION_DATE))
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
+                Aggregates.limit(1000)
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
@@ -310,8 +310,8 @@ public class Queries {
 
         List<Bson> pipeline = Arrays.asList(
                 Aggregates.match(new Document()),
-                Aggregates.limit(1),
-                Aggregates.sort(Sorts.descending(EVALUATION_DATE))
+                Aggregates.sort(Sorts.descending(EVALUATION_DATE)),
+                Aggregates.limit(1)
         );
 
         List<Document> result = collection.aggregate(pipeline).into( new ArrayList<>() );
@@ -334,11 +334,10 @@ public class Queries {
 
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
-        List<Document> estimationArray;
+        Document updateDoc;
 
-        if (estimation == null || estimation.getEstimation() == null) estimationArray = new ArrayList<>();
-        else {
-            estimationArray = new ArrayList<>();
+        if (estimation != null) {
+            List<Document> estimationArray = new ArrayList<>();
             for (QuadrupletDTO<Integer, String, Float, Float> e : estimation.getEstimation()) {
                 Document estimationDoc = new Document()
                     .append(ESTIMATION_ID, e.getFirst())
@@ -347,48 +346,62 @@ public class Queries {
                     .append(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
                 estimationArray.add(estimationDoc);
             }
+
+            updateDoc = new Document("$set", new Document()
+                .append("_id", hardID)
+                .append(PROJECT, projectId)
+                .append(STRATEGIC_INDICATOR_ID, strategicIndicatorID)
+                .append(EVALUATION_DATE, evaluationDate.toString())
+                .append(DATA_SOURCE, "QRapids Dashboard")
+                .append(NAME, strategicIndicatorName)
+                .append(DESCRIPTION, strategicIndicatorDescription)
+                .append(VALUE, value)
+                .append(RATIONALE, info)
+                .append(MISSING_FACTORS, missingFactors)
+                .append(DATES_MISMATCH, (int) datesMismatch)
+                .append(ESTIMATION, estimationArray));
         }
 
-        Document updateDoc = new Document("$set", new Document()
-            .append("_id", hardID)
-            .append(PROJECT, projectId)
-            .append(STRATEGIC_INDICATOR_ID, strategicIndicatorID)
-            .append(EVALUATION_DATE, evaluationDate)
-            .append(DATA_SOURCE, "QRapids Dashboard")
-            .append(NAME, strategicIndicatorName)
-            .append(DESCRIPTION, strategicIndicatorDescription)
-            .append(VALUE, value)
-            .append(RATIONALE, info)
-            .append(MISSING_FACTORS, missingFactors)
-            .append(DATES_MISMATCH, datesMismatch)
-            .append(ESTIMATION, estimationArray));
+        else {
+            updateDoc = new Document("$set", new Document()
+                .append("_id", hardID)
+                .append(PROJECT, projectId)
+                .append(STRATEGIC_INDICATOR_ID, strategicIndicatorID)
+                .append(EVALUATION_DATE, evaluationDate.toString())
+                .append(DATA_SOURCE, "QRapids Dashboard")
+                .append(NAME, strategicIndicatorName)
+                .append(DESCRIPTION, strategicIndicatorDescription)
+                .append(VALUE, value)
+                .append(RATIONALE, info)
+                .append(MISSING_FACTORS, missingFactors)
+                .append(DATES_MISMATCH, (int) datesMismatch));
+        }
 
         Document filter = new Document("_id", hardID);
         UpdateOptions updateOptions = new UpdateOptions().upsert(true);
         return collection.updateOne(filter, updateDoc, updateOptions);
     }
 
-    public static UpdateResult setFactorValue  (QMLevel QMLevel,
-                                                String hardID,
-                                                String projectId,
-                                                String factorID,
-                                                String factorName,
-                                                String factorDescription,
-                                                LocalDate evaluationDate,
-                                                Float value,
-                                                String info,
-                                                EstimationEvaluationDTO estimation,
-                                                List<String> missingMetrics,
-                                                long datesMismatch,
-                                                List<String> indicators) {
+    public static UpdateResult setFactorValue (QMLevel QMLevel,
+                                               String hardID,
+                                               String projectId,
+                                               String factorID,
+                                               String factorName,
+                                               String factorDescription,
+                                               LocalDate evaluationDate,
+                                               Float value,
+                                               String info,
+                                               EstimationEvaluationDTO estimation,
+                                               List<String> missingMetrics,
+                                               long datesMismatch,
+                                               List<String> indicators) {
 
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
-        List<Document> estimationArray;
+        Document updateDoc;
 
-        if (estimation == null || estimation.getEstimation() == null) estimationArray = new ArrayList<>();
-        else {
-            estimationArray = new ArrayList<>();
+        if (estimation != null) {
+            List<Document> estimationArray = new ArrayList<>();
             for (QuadrupletDTO<Integer, String, Float, Float> e : estimation.getEstimation()) {
                 Document estimationDoc = new Document()
                     .append(ESTIMATION_ID, e.getFirst())
@@ -397,22 +410,38 @@ public class Queries {
                     .append(ESTIMATION_UPPER_THRESHOLD, e.getFourth());
                 estimationArray.add(estimationDoc);
             }
+
+            updateDoc = new Document("$set", new Document()
+                .append("_id", hardID)
+                .append(PROJECT, projectId)
+                .append(FACTOR_ID, factorID)
+                .append(EVALUATION_DATE, evaluationDate.toString())
+                .append(DATA_SOURCE, "QRapids Dashboard")
+                .append(NAME, factorName)
+                .append(DESCRIPTION, factorDescription)
+                .append(VALUE, value)
+                .append(RATIONALE, info)
+                .append(MISSING_METRICS, missingMetrics)
+                .append(DATES_MISMATCH, (int) datesMismatch)
+                .append(ARRAY_STRATEGIC_INDICATORS, indicators)
+                .append(ESTIMATION, estimationArray));
         }
 
-        Document updateDoc = new Document("$set", new Document()
-            .append("_id", hardID)
-            .append(PROJECT, projectId)
-            .append(FACTOR_ID, factorID)
-            .append(EVALUATION_DATE, evaluationDate)
-            .append(DATA_SOURCE, "QRapids Dashboard")
-            .append(NAME, factorName)
-            .append(DESCRIPTION, factorDescription)
-            .append(VALUE, value)
-            .append(RATIONALE, info)
-            .append(MISSING_METRICS, missingMetrics)
-            .append(DATES_MISMATCH, datesMismatch)
-            .append(ARRAY_STRATEGIC_INDICATORS, indicators)
-            .append(ESTIMATION, estimationArray));
+        else {
+            updateDoc = new Document("$set", new Document()
+                .append("_id", hardID)
+                .append(PROJECT, projectId)
+                .append(FACTOR_ID, factorID)
+                .append(EVALUATION_DATE, evaluationDate.toString())
+                .append(DATA_SOURCE, "QRapids Dashboard")
+                .append(NAME, factorName)
+                .append(DESCRIPTION, factorDescription)
+                .append(VALUE, value)
+                .append(RATIONALE, info)
+                .append(MISSING_METRICS, missingMetrics)
+                .append(DATES_MISMATCH, (int) datesMismatch)
+                .append(ARRAY_STRATEGIC_INDICATORS, indicators));
+        }
 
         Document filter = new Document("_id", hardID);
         UpdateOptions updateOptions = new UpdateOptions().upsert(true);
@@ -434,7 +463,6 @@ public class Queries {
                 String factorID = factor.getFactorEntryID(index++);
                 Document updateDoc = new Document("$set", new Document()
                     .append(ARRAY_STRATEGIC_INDICATORS, factor.getStrategicIndicators()));
-
                 Document filter = new Document("_id", factorID);
                 UpdateOptions updateOptions = new UpdateOptions().upsert(true);
                 response = collection.updateOne(filter, updateDoc, updateOptions);
@@ -547,6 +575,7 @@ public class Queries {
                                                  String sourceCategory,
                                                  double weight,
                                                  String targetValue) {
+
         String sourceType, targetType;
         if (metrics) {
             sourceType = METRIC_TYPE;
@@ -640,6 +669,3 @@ public class Queries {
     }
 
 }
-
-
-

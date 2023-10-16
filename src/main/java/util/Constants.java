@@ -16,7 +16,6 @@ public class Constants {
     static final String METRIC_TYPE = "metrics";
     public static final String FACTOR_TYPE = "factors";
     public static final String STRATEGIC_INDICATOR_TYPE = "strategic_indicators";
-    static final String RELATIONS_TYPE = "relations";
 
     // FIELDS
 

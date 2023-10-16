@@ -6,6 +6,9 @@ import com.mongodb.client.MongoDatabase;
 import evaluation.Factor;
 import evaluation.StrategicIndicator;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Connection {
 
     private static MongoClient mongoClient;
@@ -22,6 +25,8 @@ public class Connection {
     */
 
     public static void initConnection(String ip, int port, String databaseName, String username, String password) {
+        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
+        mongoLogger.setLevel(Level.WARNING);
         String connectionString;
         if (username != null) connectionString = "mongodb://" + username + ":" + password + "@" + ip + ":" + port;
         else connectionString = "mongodb://" + ip + ":" + port;
@@ -40,7 +45,7 @@ public class Connection {
     public static void closeConnection() {
         if (mongoClient != null) mongoClient.close();
         Factor.resetFactorsIDNames();
-        StrategicIndicator.resetFactorsIDNames();
+        StrategicIndicator.resetIndicatorsIDNames();
     }
 
 }
