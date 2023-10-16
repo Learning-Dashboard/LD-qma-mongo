@@ -185,8 +185,8 @@ public class Factor {
     *         used to compute the factor
     */
     public static FactorMetricEvaluationDTO getMetricsEvaluations(String projectId, String factorID) {
-        Map<String, String> IDNames = getFactorsIDNames(projectId);
-        String factorName = Queries.getStringFromStringMapOrDefault(IDNames, factorID, factorID);
+        //Map<String, String> IDNames = getFactorsIDNames(projectId);
+        //String factorName = Queries.getStringFromStringMapOrDefault(IDNames, factorID, factorID);
         List<Document> sr = Queries.getLatest(Constants.QMLevel.metrics, projectId,  factorID);
         List<MetricEvaluationDTO> metricsEval = Common.processMetricsBuckets(sr);
         FactorEvaluationDTO factorEvaluationDTO = getSingleEvaluation(projectId, factorID);
@@ -207,8 +207,8 @@ public class Factor {
     *         used to compute the factor
     */
     public static FactorMetricEvaluationDTO getMetricsEvaluations(String projectId, String factorID, LocalDate from, LocalDate to) {
-        Map<String, String> IDNames = getFactorsIDNames(projectId);
-        String factorName = Queries.getStringFromStringMapOrDefault(IDNames, factorID, factorID);
+        //Map<String, String> IDNames = getFactorsIDNames(projectId);
+        //String factorName = Queries.getStringFromStringMapOrDefault(IDNames, factorID, factorID);
         List<Document> sr = Queries.getRanged(Constants.QMLevel.metrics, projectId, factorID, from, to);
         List<MetricEvaluationDTO> metricsEval = Common.processMetricsBuckets(sr);
         FactorEvaluationDTO factorEvaluationDTO = getSingleEvaluation(projectId, factorID);

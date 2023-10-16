@@ -129,7 +129,7 @@ public class StrategicIndicator {
     */
     public static List<StrategicIndicatorFactorEvaluationDTO> getFactorsEvaluations(String projectId) {
         List<StrategicIndicatorFactorEvaluationDTO> ret = new ArrayList<>();
-        Map<String, String> IDNames = getFactorsIDNames(projectId);
+        Map<String, String> IDNames = getIndicatorsIDNames(projectId);
         for (String indicatorID : IDNames.keySet()) {
             StrategicIndicatorFactorEvaluationDTO indicatorFactors = getFactorsEvaluations(projectId, indicatorID);
             ret.add(indicatorFactors);
@@ -152,7 +152,7 @@ public class StrategicIndicator {
     */
     public static List<StrategicIndicatorFactorEvaluationDTO> getFactorsEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<StrategicIndicatorFactorEvaluationDTO> ret = new ArrayList<>();
-        Map<String, String> IDNames = getFactorsIDNames(projectId);
+        Map<String, String> IDNames = getIndicatorsIDNames(projectId);
         for (String indicatorID : IDNames.keySet()) {
             StrategicIndicatorFactorEvaluationDTO indicatorFactors = getFactorsEvaluations(projectId, indicatorID, from, to);
             ret.add(indicatorFactors);
@@ -172,7 +172,7 @@ public class StrategicIndicator {
     *         of the factors impacting on this strategic indicator
     */
     public static StrategicIndicatorFactorEvaluationDTO getFactorsEvaluations(String projectId, String strategicIndicatorID) {
-        List<Document> sr = Queries.getLatest( Constants.QMLevel.factors, projectId, strategicIndicatorID);
+        List<Document> sr = Queries.getLatest(Constants.QMLevel.factors, projectId, strategicIndicatorID);
         List<FactorEvaluationDTO> factorsEval = Common.processFactorsBuckets(sr);
         StrategicIndicatorEvaluationDTO strategicIndicatorEvaluationDTO = getSingleEvaluation(projectId, strategicIndicatorID);
         return new StrategicIndicatorFactorEvaluationDTO(strategicIndicatorEvaluationDTO, factorsEval);
@@ -213,9 +213,9 @@ public class StrategicIndicator {
     */
     public static List<FactorMetricEvaluationDTO> getMetricsEvaluations(String projectId, String strategicIndicatorID) {
         List <FactorMetricEvaluationDTO> ret = new ArrayList<>();
-        StrategicIndicatorFactorEvaluationDTO siFactors = getFactorsEvaluations(projectId,strategicIndicatorID);
+        StrategicIndicatorFactorEvaluationDTO siFactors = getFactorsEvaluations(projectId, strategicIndicatorID);
         for (FactorEvaluationDTO factor : siFactors.getFactors())
-            ret.add(new FactorMetricEvaluationDTO(factor, Factor.getMetricsEvaluations(factor.getProject(),factor.getID()).getMetrics()));
+            ret.add(new FactorMetricEvaluationDTO(factor, Factor.getMetricsEvaluations(factor.getProject(), factor.getID()).getMetrics()));
         return ret;
     }
 
@@ -243,7 +243,7 @@ public class StrategicIndicator {
         return ret;
     }
 
-    private static Map<String, String> getFactorsIDNames(String projectId) {
+    private static Map<String, String> getIndicatorsIDNames(String projectId) {
         if (IDNames == null) {
             IDNames = Common.getIDNames(projectId, Constants.QMLevel.strategic_indicators);
             return IDNames;
