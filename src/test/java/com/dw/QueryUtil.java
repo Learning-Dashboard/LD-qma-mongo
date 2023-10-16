@@ -50,40 +50,40 @@ class QueryUtil {
             String[] sourceCategories = {"Medium", "Low"};
             Relations.setStrategicIndicatorFactorRelation(projectId, factorsID2,"HWReliability",
                     dateFrom, new double[]{0d}, sourceValues2, sourceCategories, "High");
-            */
 
             // GET
-            //ArrayList<RelationDTO> relations = Relations.getRelations("test", dateFrom);
+            ArrayList<RelationDTO> relations = Relations.getRelations("test", dateFrom);
 
             // CLASS: FACTOR
-            //System.err.println("-- FACTORS 1 - getEvaluations(projectId)");
-            //List<FactorEvaluationDTO> factorsEvaluationLatest = Factor.getEvaluations(projectId);
-            //System.err.println("-- FACTORS 2 - getEvaluations(projectId, factorId)");
-            //FactorEvaluationDTO factorEvaluationDTO = Factor.getSingleEvaluation(projectId, factorCQ);
-            //System.err.println("-- FACTORS 3 - getEvaluations(projectId, date, date)");
-            //List<FactorEvaluationDTO> factorsEvaluationRanged = Factor.getEvaluations(projectId, dateFrom, dateTo);
+            System.err.println("-- FACTORS 1 - getEvaluations(projectId)");
+            List<FactorEvaluationDTO> factorsEvaluationLatest = Factor.getEvaluations(projectId);
+            System.err.println("-- FACTORS 2 - getEvaluations(projectId, factorId)");
+            FactorEvaluationDTO factorEvaluationDTO = Factor.getSingleEvaluation(projectId, factorCQ);
+            System.err.println("-- FACTORS 3 - getEvaluations(projectId, date, date)");
+            List<FactorEvaluationDTO> factorsEvaluationRanged = Factor.getEvaluations(projectId, dateFrom, dateTo);
 
-            //System.err.println("-- FACTORS 4 - getMetricsEvaluations(projectId)");
-            //List<FactorMetricEvaluationDTO> factorsMetricsLatest = Factor.getMetricsEvaluations(projectId);
-            //System.err.println("-- FACTORS 5 - getMetricsEvaluations(projectId, date, date)");
-            //List<FactorMetricEvaluationDTO> factorsMetricsRanged = Factor.getMetricsEvaluations(projectId, dateFrom, dateTo);
+            System.err.println("-- FACTORS 4 - getMetricsEvaluations(projectId)");
+            List<FactorMetricEvaluationDTO> factorsMetricsLatest = Factor.getMetricsEvaluations(projectId);
+            System.err.println("-- FACTORS 5 - getMetricsEvaluations(projectId, date, date)");
+            List<FactorMetricEvaluationDTO> factorsMetricsRanged = Factor.getMetricsEvaluations(projectId, dateFrom, dateTo);
 
-            //System.err.println("-- FACTORS 6 - getMetricsEvaluations(projectId, factor)");
-            //FactorMetricEvaluationDTO metricsEvaluationLatest = Factor.getMetricsEvaluations(projectId, factorCQ);
-            //System.err.println("-- FACTORS 7 - getMetricsEvaluations(projectId, factor, date, date)");
-            //FactorMetricEvaluationDTO metricsEvaluationRanged = Factor.getMetricsEvaluations(projectId, factorCQ, dateFrom, dateTo);
+            System.err.println("-- FACTORS 6 - getMetricsEvaluations(projectId, factor)");
+            FactorMetricEvaluationDTO metricsEvaluationLatest = Factor.getMetricsEvaluations(projectId, factorCQ);
+            System.err.println("-- FACTORS 7 - getMetricsEvaluations(projectId, factor, date, date)");
+            FactorMetricEvaluationDTO metricsEvaluationRanged = Factor.getMetricsEvaluations(projectId, factorCQ, dateFrom, dateTo);
+             */
 
-            /*
             // CLASS: METRIC
-            System.err.println("--  METRIC 1 ");
-            List<MetricEvaluationDTO> allMetricsEvaluationLatest = Metric.getEvaluations(projectId);
-            System.err.println("-- METRIC 2 ");
-            List<MetricEvaluationDTO> allMetricsEvaluationRanged = Metric.getEvaluations(projectId, dateFrom, dateTo);
-            System.err.println("-- METRIC 3 ");
-            MetricEvaluationDTO latestMetricEvaluation = Metric.getSingleEvaluation(projectId, metricQ);
+            //System.err.println("--  METRIC 1 ");
+            //List<MetricEvaluationDTO> allMetricsEvaluationLatest = Metric.getEvaluations(projectId);
+            //System.err.println("-- METRIC 2 ");
+            //List<MetricEvaluationDTO> allMetricsEvaluationRanged = Metric.getEvaluations(projectId, dateFrom, dateTo);
+            //System.err.println("-- METRIC 3 ");
+            //MetricEvaluationDTO latestMetricEvaluation = Metric.getSingleEvaluation(projectId, metricQ);
             System.err.println("-- METRIC 4 ");
             MetricEvaluationDTO singleMetricEvaluationRanged = Metric.getSingleEvaluation(projectId, metricQ, dateFrom, dateTo);
 
+            /*
             // CLASS: STRATEGIC INDICATOR
             System.err.println("-- STRATEGIC INDICATOR 1");
             List<StrategicIndicatorEvaluationDTO> strategicIndicatorsEvaluationLatest = StrategicIndicator.getEvaluations(projectId);
