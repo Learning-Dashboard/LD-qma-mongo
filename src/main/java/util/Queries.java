@@ -484,7 +484,7 @@ public class Queries {
             String relation = String.join("-", projectID, factorID[i]) + "->" +
                 String.join("-", strategicIndicatorID, evaluationDate.toString());
 
-            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate, relation, false, sourceID, targetID,
+            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate.toString(), relation, false, sourceID, targetID,
                 safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
                 safeGetFromDoubleArray(weight, i), targetValue);
 
@@ -497,8 +497,9 @@ public class Queries {
         BulkWriteResult bulkWriteResult = collection.bulkWrite(writes, bulkWriteOptions);
         for (BulkWriteUpsert upsert : bulkWriteResult.getUpserts())
             System.out.println("Upserted document ID: " + upsert.getId());
+        int insertedDocs = bulkWriteResult.getMatchedCount() + bulkWriteResult.getUpserts().size();
         return bulkWriteResult.wasAcknowledged() &&
-               bulkWriteResult.getMatchedCount() == bulkWriteResult.getInsertedCount();
+                factorID.length == insertedDocs;
     }
 
     public static boolean setMetricQFRelationIndex(String projectID, String[] metricID, double[] weight,
@@ -518,7 +519,7 @@ public class Queries {
             String relation = String.join("-", projectID, metricID[i]) + "->" +
                 String.join("-", qualityFactorID, evaluationDate.toString());
 
-            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate, relation, true, sourceID, targetID,
+            Document updateDoc = buildBulkWriteRequest(projectID, evaluationDate.toString(), relation, true, sourceID, targetID,
                 safeGetFromDoubleArray(sourceValue, i), safeGetFromStringArray(sourceCategories, i),
                 safeGetFromDoubleArray(weight, i), targetValue);
 
@@ -531,20 +532,21 @@ public class Queries {
         BulkWriteResult bulkWriteResult = collection.bulkWrite(writes, bulkWriteOptions);
         for (BulkWriteUpsert upsert : bulkWriteResult.getUpserts())
             System.out.println("Upserted document ID: " + upsert.getId());
+        int insertedDocs = bulkWriteResult.getMatchedCount() + bulkWriteResult.getUpserts().size();
         return bulkWriteResult.wasAcknowledged() &&
-               bulkWriteResult.getMatchedCount() == bulkWriteResult.getInsertedCount();
+               metricID.length == insertedDocs;
     }
 
     public static Document buildBulkWriteRequest(String projectID,
-                                                     LocalDate evaluationDate,
-                                                     String relation,
-                                                     Boolean metrics,
-                                                     String sourceID,
-                                                     String targetID,
-                                                     double value,
-                                                     String sourceCategory,
-                                                     double weight,
-                                                     String targetValue) {
+                                                 String evaluationDate,
+                                                 String relation,
+                                                 Boolean metrics,
+                                                 String sourceID,
+                                                 String targetID,
+                                                 double value,
+                                                 String sourceCategory,
+                                                 double weight,
+                                                 String targetValue) {
         String sourceType, targetType;
         if (metrics) {
             sourceType = METRIC_TYPE;

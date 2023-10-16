@@ -20,15 +20,16 @@ class QueryUtil {
     public static void main(String[] args) throws IOException {
         LocalDate dateFrom = LocalDate.of(2023,10, 13);
         LocalDate dateTo = LocalDate.of(2023, 10, 15);
+        LocalDate date = LocalDate.of(2023, 07, 22);
         String projectId="test";
         String factorCQ = "fB";
         String strategicIndicatorQ = "sA";
         String metricQ = "mA";
 
         // Set correct values before running tests
-        String ip = "localhost";
-        int port = 27017;
-        String database = "mongo";
+        String ip = "";
+        int port = 0;
+        String database = "";
         String username = null;
         String password = null;
 
@@ -38,8 +39,7 @@ class QueryUtil {
             Connection.initConnection(ip, port, database, username, password);
 
             // RELATIONS
-            /*
-            String[] factorsID = {"codequality", "swstability"};
+            String[] factorsID = {"fA", "fB"};
             double[] sourceValues = {0.8d, 0.2d};
             double[] weights = {0.7d, 0.3d};
             Relations.setStrategicIndicatorFactorRelation(projectId, factorsID, strategicIndicatorQ, dateFrom,
@@ -81,35 +81,33 @@ class QueryUtil {
             MetricEvaluationDTO latestMetricEvaluation = Metric.getSingleEvaluation(projectId, metricQ);
             System.err.println("-- METRIC 4 ");
             MetricEvaluationDTO singleMetricEvaluationRanged = Metric.getSingleEvaluation(projectId, metricQ, dateFrom, dateTo);
-            */
 
             // CLASS: STRATEGIC INDICATOR
-            //System.err.println("-- STRATEGIC INDICATOR 1");
-            //List<StrategicIndicatorEvaluationDTO> strategicIndicatorsEvaluationLatest = StrategicIndicator.getEvaluations(projectId);
-            //System.err.println("-- STRATEGIC INDICATOR 2");
-            //StrategicIndicatorEvaluationDTO strategicIndicatorEvaluationDTO = StrategicIndicator.getSingleEvaluation(projectId, strategicIndicatorQ);
-            //System.err.println("-- STRATEGIC INDICATOR 3");
-            //List<StrategicIndicatorEvaluationDTO> strategicIndicatorsEvaluationRanged = StrategicIndicator.getEvaluations(projectId, dateFrom, dateTo);
+            System.err.println("-- STRATEGIC INDICATOR 1");
+            List<StrategicIndicatorEvaluationDTO> strategicIndicatorsEvaluationLatest = StrategicIndicator.getEvaluations(projectId);
+            System.err.println("-- STRATEGIC INDICATOR 2");
+            StrategicIndicatorEvaluationDTO strategicIndicatorEvaluationDTO = StrategicIndicator.getSingleEvaluation(projectId, strategicIndicatorQ);
+            System.err.println("-- STRATEGIC INDICATOR 3");
+            List<StrategicIndicatorEvaluationDTO> strategicIndicatorsEvaluationRanged = StrategicIndicator.getEvaluations(projectId, dateFrom, dateTo);
 
-            //System.err.println("-- STRATEGIC INDICATOR 4");
-            //StrategicIndicatorFactorEvaluationDTO SIfactorsEvaluationLatest = StrategicIndicator.getFactorsEvaluations(projectId, strategicIndicatorQ);
-            //System.err.println("-- STRATEGIC INDICATOR 5 ");
-            //StrategicIndicatorFactorEvaluationDTO SIfactorsEvaluationRanged = StrategicIndicator.getFactorsEvaluations(projectId, strategicIndicatorQ, dateFrom, dateTo);
+            System.err.println("-- STRATEGIC INDICATOR 4");
+            StrategicIndicatorFactorEvaluationDTO SIfactorsEvaluationLatest = StrategicIndicator.getFactorsEvaluations(projectId, strategicIndicatorQ);
+            System.err.println("-- STRATEGIC INDICATOR 5 ");
+            StrategicIndicatorFactorEvaluationDTO SIfactorsEvaluationRanged = StrategicIndicator.getFactorsEvaluations(projectId, strategicIndicatorQ, dateFrom, dateTo);
 
-            //System.err.println("-- STRATEGIC INDICATOR 6 ");
-            //List<StrategicIndicatorFactorEvaluationDTO> strategicIndicatorsFactorsLatest = StrategicIndicator.getFactorsEvaluations(projectId);
-            //System.err.println("-- STRATEGIC INDICATOR 7 ");
-            //List<StrategicIndicatorFactorEvaluationDTO> strategicIndicatorsFactorsMetricsRanged = StrategicIndicator.getFactorsEvaluations(projectId, dateFrom, dateTo);
+            System.err.println("-- STRATEGIC INDICATOR 6 ");
+            List<StrategicIndicatorFactorEvaluationDTO> strategicIndicatorsFactorsLatest = StrategicIndicator.getFactorsEvaluations(projectId);
+            System.err.println("-- STRATEGIC INDICATOR 7 ");
+            List<StrategicIndicatorFactorEvaluationDTO> strategicIndicatorsFactorsMetricsRanged = StrategicIndicator.getFactorsEvaluations(projectId, dateFrom, dateTo);
 
-            //System.err.println("-- STRATEGIC INDICATOR 8 ");
-            //List<FactorMetricEvaluationDTO> strategicIndicatorFactorsMetricsLatest = StrategicIndicator.getMetricsEvaluations(projectId, strategicIndicatorQ);
-            //System.err.println("-- STRATEGIC INDICATOR 9");
-            //List<FactorMetricEvaluationDTO> strategicIndicatorFactorsMetricsRanged = StrategicIndicator.getMetricsEvaluations(projectId, strategicIndicatorQ, dateFrom, dateTo);
+            System.err.println("-- STRATEGIC INDICATOR 8 ");
+            List<FactorMetricEvaluationDTO> strategicIndicatorFactorsMetricsLatest = StrategicIndicator.getMetricsEvaluations(projectId, strategicIndicatorQ);
+            System.err.println("-- STRATEGIC INDICATOR 9");
+            List<FactorMetricEvaluationDTO> strategicIndicatorFactorsMetricsRanged = StrategicIndicator.getMetricsEvaluations(projectId, strategicIndicatorQ, dateFrom, dateTo);
 
             // CLOSE CONNECTION
             System.err.println("-- CLOSE CONNECTION");
             Connection.closeConnection();
-
         }
         catch (Exception ex) {
             System.err.println("----- QUERY TEST UTIL - ERROR " + ex.toString());
