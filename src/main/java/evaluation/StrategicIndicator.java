@@ -17,12 +17,12 @@ public class StrategicIndicator {
     private static Map<String, String> IDNames;
 
     /**
-    * This method returns the list of the strategic indicators and the last evaluation. The evaluation contains the
-    * evaluation date and value
+    * This method returns the list of the strategic indicators and the last evaluation.
+    * The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
+    * @param projectId Identifier of the project.
     *
-    * @return The list of strategic indicators' evaluations
+    * @return The list of strategic indicators' evaluations.
     */
     public static List<StrategicIndicatorEvaluationDTO> getEvaluations(String projectId) {
         List<StrategicIndicatorEvaluationDTO> ret;
@@ -32,13 +32,13 @@ public class StrategicIndicator {
     }
 
     /**
-    * This method returns the last evaluation of the strategic indicator passed as a parameter. The evaluation contains the evaluation
-    * date and value.
+    * This method returns the last evaluation of the strategic indicator passed as a parameter.
+    * The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorId identifier of the strategic indicator
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorId Identifier of the strategic indicator.
     *
-    * @return Strategic indicator evaluation
+    * @return Strategic indicator evaluation.
     */
     public static StrategicIndicatorEvaluationDTO getSingleEvaluation(String projectId, String strategicIndicatorId) {
         List<StrategicIndicatorEvaluationDTO> ret;
@@ -53,11 +53,11 @@ public class StrategicIndicator {
     * This method returns the list of the strategic indicators and the evaluations belonging to the specific period
     * defined by the parameters from and to. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the project.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
-    * @return The list of strategic indicators' evaluations
+    * @return The list of strategic indicators' evaluations.
     */
     public static List<StrategicIndicatorEvaluationDTO> getEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<StrategicIndicatorEvaluationDTO> ret;
@@ -70,9 +70,9 @@ public class StrategicIndicator {
     * The external repository have two identifiers for each element, the field used by the repository (hard ID) and the
     * id and evaluation date used by the "users".
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
-    * @param evaluationDate date when the evaluation has been computed
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
+    * @param evaluationDate Date when the evaluation has been computed.
     */
     public static String getHardID(String projectId, String strategicIndicatorID, LocalDate evaluationDate) {
         return strategicIndicatorID + "-" + FormattedDates.formatDate(evaluationDate);
@@ -82,13 +82,13 @@ public class StrategicIndicator {
     * This method updates the value of an strategic indicators in a given date, if it doesn't exist
     * a new strategic indicator is created with the given data.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
-    * @param strategicIndicatorName name of the strategic indicator
-    * @param strategicIndicatorDescription description of the strategic indicator
-    * @param value evaluation value
-    * @param evaluationDate date when the evaluation has been computed
-    * @param estimation in case we have a estimation (probabilities and probable values), instead of a single value
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
+    * @param strategicIndicatorName Name of the strategic indicator.
+    * @param strategicIndicatorDescription Description of the strategic indicator.
+    * @param value Evaluation value.
+    * @param evaluationDate Date when the evaluation has been computed.
+    * @param estimation In case we have a estimation (probabilities and probable values), instead of a single value.
     */
     public static UpdateResult setStrategicIndicatorEvaluation(String projectId,
                                                                String strategicIndicatorID,
@@ -122,10 +122,10 @@ public class StrategicIndicator {
     * This method returns the list of the strategic indicators. For each strategic indicator, it returns the list of
     * factors associated to it and their last evaluation. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
+    * @param projectId Identifier of the project.
     *
     * @return The list of strategic indicators' evaluations, for each strategic indicator it returns the evaluation
-    *         of the factors impacting on this strategic indicator
+    *         of the factors impacting on this strategic indicator.
     */
     public static List<StrategicIndicatorFactorEvaluationDTO> getFactorsEvaluations(String projectId) {
         List<StrategicIndicatorFactorEvaluationDTO> ret = new ArrayList<>();
@@ -143,12 +143,12 @@ public class StrategicIndicator {
     * factors associated to it and their evaluations belonging to the period defined by the parameters from and to.
     * The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the project.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
     * @return The list of strategic indicators' evaluations, for each strategic indicator it returns the evaluation
-    *         of the factors impacting on this strategic indicator
+    *         of the factors impacting on this strategic indicator.
     */
     public static List<StrategicIndicatorFactorEvaluationDTO> getFactorsEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<StrategicIndicatorFactorEvaluationDTO> ret = new ArrayList<>();
@@ -165,11 +165,11 @@ public class StrategicIndicator {
     * This method returns the list of factors associated to the strategic indicator evaluation passed as a parameter
     * and their last evaluation. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
     *
     * @return The strategic indicator evaluations, for this strategic indicator it returns the evaluation
-    *         of the factors impacting on this strategic indicator
+    *         of the factors impacting on this strategic indicator.
     */
     public static StrategicIndicatorFactorEvaluationDTO getFactorsEvaluations(String projectId, String strategicIndicatorID) {
         List<Document> sr = Queries.getLatest(Constants.QMLevel.factors, projectId, strategicIndicatorID);
@@ -183,13 +183,13 @@ public class StrategicIndicator {
     * their evaluations belonging to the period defined by the parameters from and to. The evaluation contains the
     * evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
     * @return The strategic indicator evaluations, for this strategic indicator it returns the evaluation
-    *         of the factors impacting on this strategic indicator
+    *         of the factors impacting on this strategic indicator.
     */
     public static StrategicIndicatorFactorEvaluationDTO getFactorsEvaluations(String projectId,
                                                                               String strategicIndicatorID,
@@ -205,8 +205,8 @@ public class StrategicIndicator {
     * This method returns the list of metrics associated to every factor of a strategic indicator passed as parameter
     * and the last metric evaluation. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
     *
     * @return The list of the evaluation of the factors impacting on this strategic indicator. For each factor,
     *         the evaluation of the metrics used for computing this factor.
@@ -224,10 +224,10 @@ public class StrategicIndicator {
     * and their evaluations belonging to the period defined by the parameters from and to. The evaluation contains the
     * evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param strategicIndicatorID identifier of the strategic indicator
-    * @param from starting date of the evaluations
-    * @param to ending date of the evaluations
+    * @param projectId Identifier of the project.
+    * @param strategicIndicatorID Identifier of the strategic indicator.
+    * @param from Starting date of the evaluations.
+    * @param to Ending date of the evaluations.
     *
     * @return The list of the evaluation of the factors impacting on this strategic indicator. For each factor,
     *         the evaluation of the metrics used for computing this factor.
@@ -243,6 +243,13 @@ public class StrategicIndicator {
         return ret;
     }
 
+    /**
+    * This method returns a map containing, for each existing strategic indicator in a project, its identifier and name.
+    *
+    * @param projectId Identifier of the projectId.
+    *
+    * @return A Map<ID, name> for each existing strategic indicator in the project.
+    */
     private static Map<String, String> getIndicatorsIDNames(String projectId) {
         if (IDNames == null) {
             IDNames = Common.getIDNames(projectId, Constants.QMLevel.strategic_indicators);
@@ -251,6 +258,9 @@ public class StrategicIndicator {
         return IDNames;
     }
 
+    /**
+    * Reset the map which stores the strategic indicators' identifiers and names.
+    */
     public static void resetIndicatorsIDNames() {
         IDNames = null;
     }

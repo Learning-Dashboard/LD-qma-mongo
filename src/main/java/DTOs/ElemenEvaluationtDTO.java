@@ -58,14 +58,4 @@ public class ElemenEvaluationtDTO {
         return evaluations;
     }
 
-    @Override
-    public String toString() {
-        return "ElemenEvaluationtDTO{" +
-                "ID='" + ID + '\'' +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", project='" + project + '\'' +
-                ", evaluations=" + evaluations +
-                '}';
-    }
 }

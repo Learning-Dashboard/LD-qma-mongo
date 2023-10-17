@@ -18,14 +18,15 @@ public class Simulator {
 	final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	
 	/**
-	* Fetch data for Model creation, check data is available, and create Model
+	* Fetch data for Model creation, check data is available, and create Model.
 	*
-	* @param projectId The ID of the project which owns the metrics and factors of the Model
-	* @param evaluationDate The date of the metrics and factors evaluation
+	* @param projectId The ID of the project which owns the metrics and factors of the Model.
+	* @param evaluationDate The date of the metrics and factors evaluation.
 	*
-	* @return The created Model with the fetched data
+	* @return The created Model with the fetched data.
 	*/
 	public static Model createModel( String projectId, String evaluationDate ) {
+
 		LocalDate localEvaluationDate = LocalDate.parse(evaluationDate, dtf);
 
 		List<MetricEvaluationDTO> metrics = Metric.getEvaluations( projectId, localEvaluationDate, localEvaluationDate );
@@ -43,9 +44,9 @@ public class Simulator {
 	}
 
 	/**
-	* Helper: print factor values
+	* Helper: Print factor values.
  	*
-	* @param factors The list of factor evaluations to be printed
+	* @param factors The list of factor evaluations to be printed.
 	*/
 	public static void factorPrinter( Collection<FactorEvaluationDTO> factors ) {
 		for ( FactorEvaluationDTO feDTO : factors )

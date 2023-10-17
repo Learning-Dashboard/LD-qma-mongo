@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Project{
+public class Project {
 
     /**
     * This method returns the list of suffixes used for storing the different project's assessment.

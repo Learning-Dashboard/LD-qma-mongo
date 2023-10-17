@@ -1,10 +1,6 @@
 package util;
 
-import DTOs.EstimationEvaluationDTO;
-import DTOs.EvaluationDTO;
-import DTOs.FactorEvaluationDTO;
-import DTOs.MetricEvaluationDTO;
-import DTOs.QuadrupletDTO;
+import DTOs.*;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.client.MongoCollection;
@@ -14,10 +10,11 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.io.IOException;
-import java.sql.Array;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static util.Constants.*;
 
@@ -72,9 +69,9 @@ public class Queries {
     }
 
     public static String getStringFromObjectOrDefault(Object o, String def) {
-        String valueOfObject = String.valueOf(o);
         if (o == null) return def;
-        else if (valueOfObject.equals("null")) return def;
+        String valueOfObject = String.valueOf(o);
+        if (valueOfObject.equals("null")) return def;
         else if (valueOfObject.isEmpty()) return def;
         else return valueOfObject;
     }
@@ -85,6 +82,14 @@ public class Queries {
         else return valueOfMap;
     }
 
+    /**
+    * Get the name of a collection in the database.
+    *
+    * @param elementIndexName The name of the entities in the collection (metrics, factors...).
+    * @param projectID The ID of the project.
+    *
+    * @return The name of the collection.
+    */
     private static String getIndexName(String elementIndexName, String projectID) {
         String index = elementIndexName;
         if (projectID != null && !projectID.isEmpty() &&
@@ -110,6 +115,15 @@ public class Queries {
         return getIndexName(INDEX_RELATIONS, projectId);
     }
 
+    /**
+    * Get the latest evaluations of the entities in a certain QMLevel.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    * @param parent The parent of the entities to retrieve (if any).
+    *
+    * @return A Document list containing the latest evaluations, one evaluation for each entity.
+    */
     public static List<Document> getLatest(QMLevel QMLevel, String projectId, String parent) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
@@ -134,10 +148,27 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Get the latest evaluations of the entities in a certain QMLevel.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    *
+    * @return A Document list containing the latest evaluations, one evaluation for each entity.
+    */
     public static List<Document> getLatest(String projectId, QMLevel QMLevel) {
         return getLatest(QMLevel, projectId,"all");
     }
 
+    /**
+    * Get the latest evaluation of a specific entity.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    * @param elementId The ID of the entity to get the evaluation from.
+    *
+    * @return A Document list containing the latest evaluation of said entity.
+    */
     public static List<Document> getLatestElement(String projectId, QMLevel QMLevel, String elementId) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
@@ -162,6 +193,14 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Get the name of the collection for each project and QMLevel.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    *
+    * @return The name of the collection.
+    */
     private static String getIndex(String projectId, QMLevel QMLevel) {
         String index = "";
         switch (QMLevel) {
@@ -181,6 +220,13 @@ public class Queries {
         return index;
     }
 
+    /**
+    * Get the name of the attribute which stores the ID of each entity in a collection.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    *
+    * @return The name of the attribute (metric, factor or strategic_indicator).
+    */
     private static String getIDtoGroup(QMLevel QMLevel) {
         String group = "";
         switch (QMLevel) {
@@ -197,7 +243,15 @@ public class Queries {
         return group;
     }
 
-    // Parent means you are searching for elements related to others, e.g. the factors for a specific SI
+    /**
+    * Construct a query to filter the entities' evaluations which belong to a certain parent.
+    * Parent means you are searching for elements related to others, e.g. the factors for a specific SI.
+    *
+    * @param parent The ID of the parent the entity has to be associated with.
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    *
+    * @return The query which filters the evaluations using this condition.
+    */
     private static Bson getLatestParentQueryBuilder(String parent, QMLevel QMLevel) {
         Bson query;
         if (parent.equals("all")) query = new Document();
@@ -208,6 +262,18 @@ public class Queries {
         return query;
     }
 
+    /**
+    * Construct a query to filter the entities' evaluations which belong to a certain parent,
+    * and that are also included in the specified time range.
+    * Parent means you are searching for elements related to others, e.g. the factors for a specific SI.
+    *
+    * @param parent The ID of the parent the entity has to be associated with.
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param dateFrom The starting date of the filtering time range.
+    * @param dateTo The ending date of the filtering time range.
+    *
+    * @return The query which filters the evaluations using this condition.
+    */
     private static Bson getRangedParentQueryBuilder(String parent, QMLevel QMLevel, LocalDate dateFrom, LocalDate dateTo) {
         String from = FormattedDates.formatDate(dateFrom);
         String to = FormattedDates.formatDate(dateTo);
@@ -235,6 +301,17 @@ public class Queries {
         return Filters.and(andFilters);
     }
 
+    /**
+    * Get the evaluations that belong to a specified time range, for a certain QMLevel.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    * @param parent The ID of the parent the entity has to be associated with.
+    * @param dateFrom The starting date of the filtering time range.
+    * @param dateTo The ending date of the filtering time range.
+    *
+    * @return The Document list containing the filtered evaluations.
+    */
     public static List<Document> getRanged(QMLevel QMLevel, String projectId , String parent, LocalDate dateFrom, LocalDate dateTo) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
@@ -258,10 +335,31 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Get the evaluations that belong to a specified time range, for a certain QMLevel.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    * @param dateFrom The starting date of the filtering time range.
+    * @param dateTo The ending date of the filtering time range.
+    *
+    * @return The Document list containing the filtered evaluations.
+    */
     public static List<Document> getRanged(QMLevel QMLevel, String projectId, LocalDate dateFrom, LocalDate dateTo) {
         return getRanged(QMLevel, projectId,"all", dateFrom, dateTo);
     }
 
+    /**
+    * Get the evaluations that belong to a specified time range, for a specific entity.
+    *
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    * @param projectId The ID of the project.
+    * @param elementId The ID of the entity we want to retrieve the evaluations from.
+    * @param from The starting date of the filtering time range.
+    * @param to The ending date of the filtering time range.
+    *
+    * @return The Document list containing the filtered evaluations.
+    */
     public static List<Document> getRangedElement(String projectId, QMLevel QMLevel, String elementId, LocalDate from, LocalDate to) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
@@ -288,6 +386,15 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Get the relations that belong to a specified time range.
+    *
+    * @param projectId The ID of the project.
+    * @param dateFrom The starting date of the filtering time range.
+    * @param dateTo The ending date of the filtering time range.
+    *
+    * @return The Document list containing the filtered relations.
+    */
     public static List<Document> getRelations(LocalDate dateFrom, LocalDate dateTo, String projectId) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
@@ -304,6 +411,13 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Get the latest relations (the last evaluation of each existing relation).
+    *
+    * @param projectId The ID of the project.
+    *
+    * @return The Document list containing the latest relations.
+    */
     public static List<Document> getLatestRelationsDate(String projectId) {
         MongoDatabase database = Connection.getMongoDatabase();
         MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
@@ -319,6 +433,11 @@ public class Queries {
         return result;
     }
 
+    /**
+    * Update the information of an existing Strategic Indicator.
+    *
+    * @param QMLevel The QMLevel of the entity, which in this case is Strategic Indicators.
+    */
     public static UpdateResult setStrategicIndicatorValue(QMLevel QMLevel,
                                                           String hardID,
                                                           String projectId,
@@ -382,6 +501,11 @@ public class Queries {
         return collection.updateOne(filter, updateDoc, updateOptions);
     }
 
+    /**
+    * Update the information of an existing Factor.
+    *
+    * @param QMLevel The QMLevel of the entity, which in this case is Factors.
+    */
     public static UpdateResult setFactorValue (QMLevel QMLevel,
                                                String hardID,
                                                String projectId,
@@ -448,8 +572,12 @@ public class Queries {
         return collection.updateOne(filter, updateDoc, updateOptions);
     }
 
-    // Function that updates the factors' index with the information of the strategic indicators using
-    // a concrete factor evaluation. These entries already exist in the factors' index.
+    /**
+    * Function that updates the factors' index with the information of the strategic indicators using
+    * a concrete factor evaluation. These entries already exist in the factors' index.
+    *
+    * @param factor The FactorEvaluationDTO that contains the Strategic Indicators associated to that factor.
+    */
     public static UpdateResult setFactorStrategicIndicatorRelation(FactorEvaluationDTO factor) {
         MongoDatabase database = Connection.getMongoDatabase();
         String indexName = getIndex( factor.getProject(), QMLevel.factors );
@@ -471,8 +599,12 @@ public class Queries {
         return response;
     }
 
-    // Function that updates the metrics' index with the information of the quality factor using
-    // a concrete metric evaluation. These entries already exist in the metrics' index.
+    /**
+    * Function that updates the metrics' index with the information of the quality factor using
+    * a concrete metric evaluation. These entries already exist in the metrics' index.
+    *
+    * @param metric The MetricEvaluationDTO that contains the Factors associated to that metric.
+    */
     public static UpdateResult setMetricQualityFactorRelation(MetricEvaluationDTO metric) {
         String indexName = getIndex(metric.getProject(), QMLevel.metrics);
         MongoDatabase database = Connection.getMongoDatabase();
@@ -495,6 +627,11 @@ public class Queries {
         return response;
     }
 
+    /**
+    * Create or update the relations between Factors and Strategic Indicators.
+    *
+    * @return A boolean indicating if the operation could be performed correctly.
+    */
     public static boolean setFactorSIRelationIndex(String projectID, String[] factorID, double[] weight,
                                                    double[] sourceValue, String[] sourceCategories,
                                                    String strategicIndicatorID, LocalDate evaluationDate,
@@ -530,6 +667,11 @@ public class Queries {
                 factorID.length == insertedDocs;
     }
 
+    /**
+    * Create or update the relations between Metrics and Factors.
+    *
+    * @return A boolean indicating if the operation could be performed correctly.
+    */
     public static boolean setMetricQFRelationIndex(String projectID, String[] metricID, double[] weight,
                                                    double[] sourceValue, String[] sourceCategories,
                                                    String qualityFactorID, LocalDate evaluationDate,
@@ -565,6 +707,11 @@ public class Queries {
                metricID.length == insertedDocs;
     }
 
+    /**
+    * Build a BulkWriteRequest to create or update documents in the Relations collection.
+    *
+    * @return The created BulkWriteRequest as a Document.
+    */
     public static Document buildBulkWriteRequest(String projectID,
                                                  String evaluationDate,
                                                  String relation,
@@ -600,6 +747,11 @@ public class Queries {
             .append(SOURCELABEL, sourceCategory));
     }
 
+    /**
+    * Get the currently existing collections in the database.
+    *
+    * @return A list containing the collections' names.
+    */
     public static List<String> getCollections() {
         MongoDatabase database = Connection.getMongoDatabase();
         List<String> collectionNames = new ArrayList<>();
@@ -607,6 +759,14 @@ public class Queries {
         return collectionNames;
     }
 
+    /**
+    * Get the existing relations' (Metric -> Factor) documents in a provided date.
+    *
+    * @param projectId The ID of the project.
+    * @param evaluationDate The date we want the relations to belong to.
+    *
+    * @return A list of Documents which contains the filtered relations.
+    */
 	public static List<Document> getFactorMetricsRelations(String projectId, String evaluationDate) {
         MongoDatabase database = Connection.getMongoDatabase();
         String indexName = INDEX_RELATIONS + "." + projectId;
@@ -624,6 +784,13 @@ public class Queries {
         return result;
 	}
 
+    /**
+    * Create the Strategic Indicators' index, if it does not exist already.
+    *
+    * @param projectID The ID of the project.
+    *
+    * @return A boolean indicating if the index was created correctly.
+    */
     public static boolean prepareSIIndex(String projectID) {
         MongoDatabase database = Connection.getMongoDatabase();
         String collectionName = getIndexName(STRATEGIC_INDICATOR_TYPE, projectID);
@@ -646,6 +813,13 @@ public class Queries {
         return false;
     }
 
+    /**
+     * Create the Factors' index, if it does not exist already.
+     *
+     * @param projectID The ID of the project.
+     *
+     * @return A boolean indicating if the index was created correctly.
+     */
     public static boolean prepareQFIndex(String projectID) {
         MongoDatabase database = Connection.getMongoDatabase();
         String collectionName = getIndexName(FACTOR_TYPE, projectID);

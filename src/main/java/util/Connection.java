@@ -19,11 +19,9 @@ public class Connection {
     *
     * @param ip IP where MongoDB is available. [MANDATORY]
     * @param port PORT where the MongoDB services are available. [MANDATORY]
-    * @param username credentials when MongoDB requires them. [OPTIONAL]
-    * @param password credentials when MongoDB requires them. [OPTIONAL]
-    *
+    * @param username Credentials when MongoDB requires them. [OPTIONAL]
+    * @param password Credentials when MongoDB requires them. [OPTIONAL]
     */
-
     public static void initConnection(String ip, int port, String databaseName, String username, String password) {
         Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
         mongoLogger.setLevel(Level.WARNING);
@@ -42,6 +40,9 @@ public class Connection {
         return mongoDatabase;
     }
 
+    /**
+    * This method closes the previously created connection to the MongoDB container and databases (if any).
+    */
     public static void closeConnection() {
         if (mongoClient != null) mongoClient.close();
         Factor.resetFactorsIDNames();

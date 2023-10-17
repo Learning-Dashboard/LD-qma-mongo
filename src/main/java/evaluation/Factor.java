@@ -21,9 +21,9 @@ public class Factor {
     * This method returns the list of the factors and the last evaluation.
     * The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
+    * @param projectId Identifier of the project.
     *
-    * @return The list of factors evaluation
+    * @return The list of factors evaluation.
     */
     public static List<FactorEvaluationDTO> getEvaluations(String projectId) {
         List<FactorEvaluationDTO> ret;
@@ -36,10 +36,10 @@ public class Factor {
     * This method returns the last evaluation of the factor passed as a parameter.
     * The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param factorId identifier of the factor
+    * @param projectId Identifier of the project.
+    * @param factorId Identifier of the factor.
     *
-    * @return Factor evaluation
+    * @return Factor evaluation.
     */
     public static FactorEvaluationDTO getSingleEvaluation(String projectId, String factorId) {
         List<FactorEvaluationDTO> ret;
@@ -54,11 +54,11 @@ public class Factor {
     * This method returns the list of the factors and the evaluations belonging to a specific period defined by the
     * parameters from and to. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the project.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
-    * @return The list of factors evaluations
+    * @return The list of factors evaluations.
     */
     public static List<FactorEvaluationDTO> getEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<FactorEvaluationDTO> ret;
@@ -71,11 +71,11 @@ public class Factor {
     * The external repository have two identifiers for each element, the field used by the repository
     * (hard ID) and the id and evaluation date used by the "users".
     *
-    * @param projectId identifier of the project
-    * @param qualityFactorID identifier of the quality factor
-    * @param evaluationDate date when the evaluation has been computed
+    * @param projectId Identifier of the project.
+    * @param qualityFactorID Identifier of the quality factor.
+    * @param evaluationDate Date when the evaluation has been computed.
     *
-    * @return The hard ID of the factor
+    * @return The hard ID of the factor.
     */
     public static String getHardID(String projectId, String qualityFactorID, LocalDate evaluationDate) {
         if (projectId.isEmpty()) return qualityFactorID + "-" + FormattedDates.formatDate(evaluationDate);
@@ -86,13 +86,13 @@ public class Factor {
     * This method updates the value of an quality factors in a given date, if it doesn't exist
     * a new quality factor is created with the given data.
     *
-    * @param projectId identifier of the project
-    * @param factorID identifier of the quality factor
-    * @param factorName name of the quality factor
-    * @param factorDescription description of the quality factor
-    * @param value evaluation value
-    * @param evaluationDate date when the evaluation has been computed
-    * @param estimation in case we have an estimation (probabilities and probable values), instead of a single value
+    * @param projectId Identifier of the project.
+    * @param factorID Identifier of the quality factor.
+    * @param factorName Name of the quality factor.
+    * @param factorDescription Description of the quality factor.
+    * @param value Evaluation value.
+    * @param evaluationDate Date when the evaluation has been computed.
+    * @param estimation In case we have an estimation (probabilities and probable values), instead of a single value.
     */
     public static UpdateResult setFactorEvaluation(String projectId,
                                                    String factorID,
@@ -122,7 +122,7 @@ public class Factor {
     /**
     * This method updates the value of the strategic indicators' relation for a list of factor.
     *
-    * @param factors DTO with the factor information
+    * @param factors DTO with the factor information.
     */
     public static UpdateResult setStrategicIndicatorRelation(List<FactorEvaluationDTO> factors) {
         UpdateResult response = null;
@@ -136,10 +136,10 @@ public class Factor {
     * This method returns the list of the factors, for each factor it returns the list of metrics associated to this
     * factor and the last metric evaluation. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
+    * @param projectId Identifier of the project.
     *
     * @return The list of factors' evaluations, for each factor it contains the list of
-    *         the evaluation of the metrics used to compute the factor
+    *         the evaluation of the metrics used to compute the factor.
     */
     public static List<FactorMetricEvaluationDTO> getMetricsEvaluations(String projectId) {
         List<FactorMetricEvaluationDTO> ret = new ArrayList<>();
@@ -157,12 +157,12 @@ public class Factor {
     * factor. For each metric, it returns the evaluations belonging to the period defined by the parameters from and
     * to. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the project.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
     * @return The list of factors' evaluations, for each factor it contains the list of
-    *         the evaluation of the metrics used to compute the factor
+    *         the evaluation of the metrics used to compute the factor.
     */
     public static List<FactorMetricEvaluationDTO> getMetricsEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<FactorMetricEvaluationDTO> ret = new ArrayList<>();
@@ -179,11 +179,11 @@ public class Factor {
     * This method returns the list of metrics associated to the factor evaluation passed as parameter and the last
     * metric evaluation. The evaluation contains the evaluation date and value.
     *
-    * @param projectId identifier of the project
-    * @param factorID identifier of the factor
+    * @param projectId Identifier of the project.
+    * @param factorID Identifier of the factor.
     *
     * @return The list of factors' evaluations, for each factor it contains the list of the evaluation of the metrics
-    *         used to compute the factor
+    *         used to compute the factor.
     */
     public static FactorMetricEvaluationDTO getMetricsEvaluations(String projectId, String factorID) {
         //Map<String, String> IDNames = getFactorsIDNames(projectId);
@@ -199,13 +199,13 @@ public class Factor {
     * it returns the evaluations belonging to the period defined by the parameters from and to. The evaluation contains
     * the evaluation date and value.
     *
-    * @param projectId identifier of the projectId
-    * @param factorID identifier of the factor
-    * @param from initial date from the range we are querying
-    * @param to final date from the range we are querying
+    * @param projectId Identifier of the projectId.
+    * @param factorID Identifier of the factor.
+    * @param from Initial date from the range we are querying.
+    * @param to Final date from the range we are querying.
     *
     * @return The list of factors' evaluations, for each factor it contains the list of the evaluation of the metrics
-    *         used to compute the factor
+    *         used to compute the factor.
     */
     public static FactorMetricEvaluationDTO getMetricsEvaluations(String projectId, String factorID, LocalDate from, LocalDate to) {
         //Map<String, String> IDNames = getFactorsIDNames(projectId);
@@ -216,6 +216,13 @@ public class Factor {
         return new FactorMetricEvaluationDTO(factorEvaluationDTO, metricsEval);
     }
 
+    /**
+    * This method returns a map containing, for each existing factor in a project, its identifier and name.
+    *
+    * @param projectId Identifier of the projectId.
+    *
+    * @return A Map<ID, name> for each existing factor in the project.
+    */
     private static Map<String, String> getFactorsIDNames(String projectId) {
         if (IDNames == null) {
             IDNames = Common.getIDNames(projectId, Constants.QMLevel.factors);
@@ -224,6 +231,9 @@ public class Factor {
         return IDNames;
     }
 
+    /**
+    * Reset the map which stores the factors' identifiers and names.
+    */
     public static void resetFactorsIDNames() {
         IDNames = null;
     }

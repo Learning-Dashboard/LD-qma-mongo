@@ -3,8 +3,6 @@ package util;
 import DTOs.*;
 import org.bson.Document;
 
-import java.io.IOException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,11 +10,17 @@ import java.util.Map;
 
 public class Common {
 
-    /*
-    * NOTE: processMetricsBuckets, processFactorsBuckets and processStrategicIndicatorsBuckets are almost the same,
-    * but are separated as in the future there can be changes in the DTOs that require specific processing
-    */
+    //NOTE: processMetricsBuckets, processFactorsBuckets and processStrategicIndicatorsBuckets are almost the same,
+    //but are separated as in the future there can be changes in the DTOs that require specific processing
 
+    /**
+    * Create a list of MetricEvaluationDTO from a List<Document>,
+    * containing metrics' evaluations.
+    *
+    * @param result The Document list containing the metrics' evaluations.
+    *
+    * @return The equivalent list of MetricEvaluationDTO.
+    */
     public static List<MetricEvaluationDTO> processMetricsBuckets(List<Document> result) {
         List<MetricEvaluationDTO> ret = new ArrayList<>();
         for (Document res : result) { //Para cada métrica
@@ -52,6 +56,14 @@ public class Common {
         return ret;
     }
 
+    /**
+    * Create a list of FactorEvaluationDTO from a List<Document>,
+    * containing factors' evaluations.
+    *
+    * @param result The Document list containing the factors' evaluations.
+    *
+    * @return The equivalent list of FactorEvaluationDTO.
+    */
     public static List<FactorEvaluationDTO> processFactorsBuckets(List<Document> result) {
         List<FactorEvaluationDTO> ret = new ArrayList<>();
         for (Document res : result) {
@@ -92,6 +104,14 @@ public class Common {
         return ret;
     }
 
+    /**
+    * Create a list of StrategicIndicatorEvaluationDTO from a List<Document>,
+    * containing strategic indicators' evaluations.
+    *
+    * @param result The Document list containing the strategic indicators' evaluations.
+    *
+    * @return The equivalent list of StrategicIndicatorEvaluationDTO.
+    */
     public static List<StrategicIndicatorEvaluationDTO> processStrategicIndicatorsBuckets(List<Document> result) {
         List<StrategicIndicatorEvaluationDTO> ret = new ArrayList<>();
         for (Document res : result) {
@@ -159,6 +179,14 @@ public class Common {
         return ret;
     }
 
+    /**
+    * Get the IDs and names of all the existing entities in each QMLevel.
+    *
+    * @param projectId The ID of the project.
+    * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
+    *
+    * @return A Map of <ID, name> of the existing entities, for the given project and QMLevel.
+    */
     public static Map<String, String> getIDNames(String projectId, Constants.QMLevel QMLevel) {
         Map<String, String> IDNames = new HashMap<>();
         List<Document> response = Queries.getLatest(projectId, QMLevel);

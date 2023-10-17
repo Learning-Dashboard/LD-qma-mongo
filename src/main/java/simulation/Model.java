@@ -30,12 +30,13 @@ public class Model {
 	Set<String> changeFactors = new HashSet<>();
 
 	/**
-	* Create Model on metrics / factors (DTOs), and relations List<Document> (qr-eval)
-	* Assumption: MetricEvaluationDTOs and FactorEvaluationDTOs contain exactly one EvaluationDTO for a specific evaluationDate
+	* Create Model on metrics / factors (DTOs), and relations List<Document> (qr-eval).
+	* Assumption: MetricEvaluationDTOs and FactorEvaluationDTOs contain exactly
+ 	* one EvaluationDTO for a specific evaluationDate.
 	*
-	* @param metrics List of MetricEvaluationDTOs for evaluationDate and projectId
-	* @param factors List of FactorEvaluationDTOs for evaluationDate and projectId
-	* @param relations SearchResponse of relation query for metric-factor relations, evaluationDate, and projectId
+	* @param metrics List of MetricEvaluationDTOs for evaluationDate and projectId.
+	* @param factors List of FactorEvaluationDTOs for evaluationDate and projectId.
+	* @param relations SearchResponse of relation query for metric-factor relations, evaluationDate, and projectId.
 	*/
 	public Model( List<MetricEvaluationDTO> metrics, List<FactorEvaluationDTO> factors, List<Document> relations ) {
 
@@ -55,12 +56,12 @@ public class Model {
 	
 	/**
 	* Simulate change of a metric value:
-	* - Lookup MetricEvaluationDTO in mapMetricIdDTO
-	* - Change EvaluationDTO to simulated value
-	* - Updates the list of changeFactors
+	* - Lookup MetricEvaluationDTO in mapMetricIdDTO.
+	* - Change EvaluationDTO to simulated value.
+	* - Updates the list of changeFactors.
 	*
-	* @param metricId The metricId
-	* @param value The simulated value
+	* @param metricId The metricId.
+	* @param value The simulated value.
 	*/
 	public void setMetric( String metricId, Double value ) {
 		MetricEvaluationDTO medto = mapMetricIdDTO.get(metricId);
@@ -75,10 +76,11 @@ public class Model {
 	
 	/**
 	* Simulate change of for a list of metrics:
-	* - lookup MetricEvaluationDTO in mapMetricIdDTO
-	* - change EvaluationDTO to simulated value
-	* - updates the list of changeFactors
-	* @param metrics The list of metrics to be simulated (metricId and simulated value)
+	* - Lookup MetricEvaluationDTO in mapMetricIdDTO.
+	* - Change EvaluationDTO to simulated value.
+	* - Updates the list of changeFactors.
+ 	*
+	* @param metrics The list of metrics to be simulated (metricId and simulated value).
 	*/
 	public void setMetrics (Map <String, Double> metrics){
 		for (Map.Entry<String, Double> entry : metrics.entrySet())
@@ -87,9 +89,9 @@ public class Model {
 	
 	/**
 	* Simulate change of a metric value:
-	* - Reevaluate influenced factors
+	* - Reevaluate influenced factors.
 	*
-	* @return Recomputed factors
+	* @return Recomputed factors.
 	*/
 	public Collection<FactorEvaluationDTO> simulate() {	
 		for ( String factorId : changeFactors ) {
@@ -114,20 +116,20 @@ public class Model {
 	}
 	
 	/**
-	* Return the actual Collection of FactorEvaluationDTOs
+	* Return the actual Collection of FactorEvaluationDTOs.
  	*
-	* @return The map of evaluations associated to each factor
+	* @return The map of evaluations associated to each factor.
 	*/
 	public Collection<FactorEvaluationDTO> getFactors() {
 		return mapFactorIdDTO.values();
 	}
 	
 	/**
-	* Read relations
-	* - Build Maps influencedFactors and impact
-	* - Build sets relationMetricIdSet and relationFactorIdSet
+	* Read relations:
+	* - Build Maps influencedFactors and impact.
+	* - Build sets relationMetricIdSet and relationFactorIdSet.
 	*
-	* @param relations The queried relations to be built
+	* @param relations The queried relations to be built.
 	*/
 	private void readRelations(List<Document> relations) {
 		// Process documents of relations search
@@ -179,17 +181,21 @@ public class Model {
 	}
 
 	/**
-	* In some cases relations weight is an Integer instead of a Double
+	* In some cases relations weight is an Integer instead of a Double.
 	*
-	* @param weight The value of the weight as an Object
+	* @param weight The value of the weight as an Object.
 	*
-	* @return The actual value of the weight as a Double
+	* @return The actual value of the weight as a Double.
 	*/
 	private double getWeight(Object weight) {
 		if ( weight instanceof Integer ) return ( (Integer) weight ).doubleValue();
 		else return ( Double ) weight;
 	}
 
+	/**
+	* Validates if the information in the provided Relations is consistent with the
+ 	* provided factors and metrics, and throws a warning in case there are any inconsistencies.
+	*/
 	private void validate() {
 		
 		// Number of metrics / factors derived from relations are also delivered by Metric / Factor API
@@ -211,6 +217,12 @@ public class Model {
 		}
 	}
 
+	/**
+	* Modify the value of the first (and supposedly, only) evaluation in the provided DTO.
+	*
+	* @param value The new value of the evaluation.
+	* @param elementEvaluationDTO The Evaluation DTO to be modified.
+	*/
 	private void setEvaluationDTO(Double value, ElemenEvaluationtDTO elementEvaluationDTO) {
 		if (elementEvaluationDTO.getEvaluations().size() > 0) {
 			EvaluationDTO eDTO = elementEvaluationDTO.getEvaluations().get(0);

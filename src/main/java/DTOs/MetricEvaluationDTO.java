@@ -27,11 +27,5 @@ public class MetricEvaluationDTO extends ElemenEvaluationtDTO {
     public List<String> getFactors() {
         return this.factors;
     }
-
-    @Override
-    public String toString() {
-        return "MetricEvaluationDTO{" +
-                "factors=" + factors +
-                "} " + super.toString();
-    }
+    
 }

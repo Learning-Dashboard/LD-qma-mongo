@@ -25,10 +25,4 @@ public class FactorEvaluationDTO extends ElemenEvaluationtDTO {
         return this.strategic_indicators;
     }
 
-    @Override
-    public String toString() {
-        return "FactorEvaluationDTO{" +
-                "strategic_indicators=" + strategic_indicators +
-                "} " + super.toString();
-    }
 }
