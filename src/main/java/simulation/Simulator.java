@@ -48,8 +48,8 @@ public class Simulator {
 	* @param factors The list of factor evaluations to be printed
 	*/
 	public static void factorPrinter( Collection<FactorEvaluationDTO> factors ) {
-		for ( FactorEvaluationDTO fedto : factors )
-			System.out.println(fedto.getFactorEntryID(0) + ": " + fedto.getEvaluations().get(0).getValue());
+		for ( FactorEvaluationDTO feDTO : factors )
+			System.out.println(feDTO.getFactorEntryID(0) + ": " + feDTO.getEvaluations().get(0).getValue());
 		System.out.println();
 	}
 

@@ -1,23 +1,14 @@
 package simulation;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import org.bson.Document;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.SearchHit;
-
 import DTOs.ElemenEvaluationtDTO;
 import DTOs.EvaluationDTO;
 import DTOs.FactorEvaluationDTO;
 import DTOs.MetricEvaluationDTO;
+import org.bson.Document;
 import util.Queries;
+
+import java.util.*;
+import java.util.logging.Logger;
 
 public class Model {
 	
@@ -37,9 +28,9 @@ public class Model {
 	
 	// Set of affected factors
 	Set<String> changeFactors = new HashSet<>();
-	
+
 	/**
-	* Create Model on metrics / factors (DTOs), and relations SearchResponse (qr-eval)
+	* Create Model on metrics / factors (DTOs), and relations List<Document> (qr-eval)
 	* Assumption: MetricEvaluationDTOs and FactorEvaluationDTOs contain exactly one EvaluationDTO for a specific evaluationDate
 	*
 	* @param metrics List of MetricEvaluationDTOs for evaluationDate and projectId
@@ -89,7 +80,7 @@ public class Model {
 	* - updates the list of changeFactors
 	* @param metrics The list of metrics to be simulated (metricId and simulated value)
 	*/
-	public void setMetrics (Map <String,Double> metrics){
+	public void setMetrics (Map <String, Double> metrics){
 		for (Map.Entry<String, Double> entry : metrics.entrySet())
 			setMetric(entry.getKey(), entry.getValue());
 	}
@@ -116,8 +107,8 @@ public class Model {
 				sumValues += metricValue * weight;
 			}
 			
-			FactorEvaluationDTO fedto = mapFactorIdDTO.get(factorId);
-			setEvaluationDTO(sumValues / sumWeights, fedto);
+			FactorEvaluationDTO feDTO = mapFactorIdDTO.get(factorId);
+			setEvaluationDTO(sumValues / sumWeights, feDTO);
 		}
 		return mapFactorIdDTO.values();
 	}
@@ -219,17 +210,15 @@ public class Model {
 				log.warning("Factor in relations, but not delivered by Factor API: " + factorId);
 		}
 	}
-	
-
 
 	private void setEvaluationDTO(Double value, ElemenEvaluationtDTO elementEvaluationDTO) {
 		if (elementEvaluationDTO.getEvaluations().size() > 0) {
-			EvaluationDTO edto = elementEvaluationDTO.getEvaluations().get(0);
-			EvaluationDTO simulated = new EvaluationDTO(edto.getID(), edto.getDatasource(),
-				edto.getEvaluationDate(), value.floatValue(), edto.getRationale());
-			List<EvaluationDTO> ledto = new ArrayList<>();
-			ledto.add(simulated);
-			elementEvaluationDTO.setEvaluations(ledto);
+			EvaluationDTO eDTO = elementEvaluationDTO.getEvaluations().get(0);
+			EvaluationDTO simulated = new EvaluationDTO(eDTO.getID(), eDTO.getDatasource(),
+				eDTO.getEvaluationDate(), value.floatValue(), eDTO.getRationale());
+			List<EvaluationDTO> leDTO = new ArrayList<>();
+			leDTO.add(simulated);
+			elementEvaluationDTO.setEvaluations(leDTO);
 		}
 	}
 	
