@@ -2,17 +2,11 @@ package evaluation;
 
 import DTOs.MetricEvaluationDTO;
 import com.mongodb.client.result.UpdateResult;
-import org.bson.BsonValue;
 import org.bson.Document;
 import util.Common;
 import util.Constants;
-import util.FormattedDates;
 import util.Queries;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
