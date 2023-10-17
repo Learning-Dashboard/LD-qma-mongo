@@ -19,16 +19,9 @@ public class Relations {
         List<Document> sr = Queries.getLatestRelationsDate(projectID);
         if (sr.size() > 0) {
             Document doc = sr.get(0);
-            List<?> documentsList = (List<?>) doc.get("documents");
-            if (documentsList.size() > 0) {
-                Object objElem = documentsList.get(0);
-                if (objElem instanceof Document) {
-                    Document elem = (Document) objElem;
-                    Object evalDate = elem.get(Constants.EVALUATION_DATE);
-                    LocalDate date = LocalDate.parse(Queries.getStringFromObject(evalDate));
-                    return getRelations(projectID, date);
-                }
-            }
+            Object evalDate = doc.get(Constants.EVALUATION_DATE);
+            LocalDate date = LocalDate.parse(Queries.getStringFromObject(evalDate));
+            return getRelations(projectID, date);
         }
         LocalDate date = LocalDate.now();
         return getRelations(projectID, date);
@@ -37,6 +30,7 @@ public class Relations {
     public static ArrayList<RelationDTO> getRelations(String projectID, LocalDate dateTo) {
         LocalDate dateFrom = dateTo.minusDays(15);
         ArrayList<RelationDTO> relationDTO = new ArrayList<>();
+        System.out.println("HOLI: " + projectID + " " + dateTo.toString() + " " + dateFrom.toString());
 
         List<Document> responseRelations = Queries.getRelations(dateFrom, dateTo, projectID);
         Map<String, Boolean> processedElements = new HashMap<>();

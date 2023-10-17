@@ -2,12 +2,8 @@ package com.dw;
 
 import DTOs.*;
 import DTOs.Relations.RelationDTO;
-import evaluation.Relations;
+import evaluation.*;
 import util.Connection;
-
-import evaluation.Factor;
-import evaluation.Metric;
-import evaluation.StrategicIndicator;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -43,13 +39,13 @@ class QueryUtil {
             double[] sourceValues = {0.8d, 0.2d};
             double[] weights = {0.7d, 0.3d};
             Relations.setStrategicIndicatorFactorRelation(projectId, factorsID, strategicIndicatorQ, dateFrom,
-                weights, sourceValues, null, "0.80");
+              weights, sourceValues, null, "0.80");
 
-            String[] factorsID2 = {"runtimeErrors", "avrResponseTime"};
+            String[] factorsID2 = {"fC", "fD"};
             double[] sourceValues2 = {0.5d, 0.1d};
             String[] sourceCategories = {"Medium", "Low"};
-            Relations.setStrategicIndicatorFactorRelation(projectId, factorsID2,"HWReliability",
-                dateFrom, new double[]{0d}, sourceValues2, sourceCategories, "High");
+            Relations.setStrategicIndicatorFactorRelation(projectId, factorsID2,"sB",
+              dateFrom, new double[]{0d}, sourceValues2, sourceCategories, "High");
 
             // GET
             ArrayList<RelationDTO> relations = Relations.getRelations("test", dateFrom);

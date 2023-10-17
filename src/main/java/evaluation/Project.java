@@ -12,12 +12,11 @@ import java.util.List;
 public class Project{
 
     /**
-    * This method returns the list of suffixes used for storing the different projects assessment.
+    * This method returns the list of suffixes used for storing the different project's assessment.
     * The indexes for a specific project have this suffixes concatenated to the name of the index.
     *
     * @return The list of suffixes (strings) corresponding to the metrics indexes.
     */
-
     public static List<String> getProjects() {
         List<String> collections = util.Queries.getCollections();
         List<String> result = new ArrayList<>();
@@ -32,7 +31,7 @@ public class Project{
                 if (pos_suffix != -1) {
                     String cmp = collection.substring(pos_suffix + 1);
                     result.add(cmp);
-                    System.err.println("GETPROJECT: index addex: " + collection + "(project: " + cmp + ")");
+                    System.err.println("GETPROJECT: index addex: " + collection + " (project: " + cmp + ")");
                     is_added = true;
                 }
             }

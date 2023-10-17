@@ -105,6 +105,7 @@ public class Factor {
                                                    List<String> missingMetrics,
                                                    long datesMismatch,
                                                    List<String> indicators) {
+
         UpdateResult response;
         String elastic_entry_ID=getHardID(projectId, factorID, evaluationDate);
         response = Queries.setFactorValue(
@@ -212,7 +213,7 @@ public class Factor {
         List<Document> sr = Queries.getRanged(Constants.QMLevel.metrics, projectId, factorID, from, to);
         List<MetricEvaluationDTO> metricsEval = Common.processMetricsBuckets(sr);
         FactorEvaluationDTO factorEvaluationDTO = getSingleEvaluation(projectId, factorID);
-        return new FactorMetricEvaluationDTO(factorEvaluationDTO,metricsEval);
+        return new FactorMetricEvaluationDTO(factorEvaluationDTO, metricsEval);
     }
 
     private static Map<String, String> getFactorsIDNames(String projectId) {

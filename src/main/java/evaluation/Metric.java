@@ -64,10 +64,7 @@ public class Metric {
     public static List<MetricEvaluationDTO> getEvaluations(String projectId, LocalDate from, LocalDate to) {
         List<MetricEvaluationDTO> ret;
         List<Document> sr = Queries.getRanged(Constants.QMLevel.metrics, projectId, from, to);
-        System.out.println(sr.size());
         ret = Common.processMetricsBuckets(sr);
-        System.out.println(ret.size());
-        System.out.println(ret);
         return ret;
     }
 
