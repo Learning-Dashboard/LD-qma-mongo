@@ -1,10 +1,16 @@
 package util;
 
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import evaluation.Factor;
 import evaluation.StrategicIndicator;
+import org.bson.BsonDocument;
+import org.bson.BsonInt64;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,8 +29,8 @@ public class Connection {
     * @param password Credentials when MongoDB requires them. [OPTIONAL]
     */
     public static void initConnection(String ip, int port, String databaseName, String username, String password) {
-        Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
-        mongoLogger.setLevel(Level.WARNING);
+        Logger mongodbLogger = Logger.getLogger("org.mongodb.driver");
+        mongodbLogger.setLevel(Level.WARNING);
         String connectionString;
 
         if (username != null && !username.isEmpty() && password != null && !password.isEmpty())
@@ -32,6 +38,16 @@ public class Connection {
         else connectionString = "mongodb://" + ip + ":" + port;
         mongoClient = MongoClients.create(connectionString);
         mongoDatabase = mongoClient.getDatabase(databaseName);
+
+        try {
+            Bson command = new BsonDocument("ping", new BsonInt64(1));
+            mongoDatabase.runCommand(command);
+            System.out.println("Successfully connected to MongoDB");
+        } catch (MongoException e) {
+            e.printStackTrace();
+            System.err.println("Error connecting to to MongoDB");
+            System.exit(1);
+        }
     }
 
     public static MongoClient getMongoClient() {
