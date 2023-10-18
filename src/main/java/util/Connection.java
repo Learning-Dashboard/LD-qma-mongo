@@ -26,7 +26,9 @@ public class Connection {
         Logger mongoLogger = Logger.getLogger("org.mongodb.driver");
         mongoLogger.setLevel(Level.WARNING);
         String connectionString;
-        if (username != null) connectionString = "mongodb://" + username + ":" + password + "@" + ip + ":" + port;
+
+        if (username != null && !username.isEmpty() && password != null && !password.isEmpty())
+            connectionString = "mongodb://" + username + ":" + password + "@" + ip + ":" + port;
         else connectionString = "mongodb://" + ip + ":" + port;
         mongoClient = MongoClients.create(connectionString);
         mongoDatabase = mongoClient.getDatabase(databaseName);
