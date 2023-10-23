@@ -2,7 +2,13 @@
 Library providing quality model assessment from MongoDB.
 
 ## Main Functionality
-This library connects to the MongoDB database and provides assessment of the quality model elements (Strategic Indicators, Factors and Metrics).
+This library connects to the MongoDB database and provides assessment of the quality model elements:
+
+- Strategic Indicators
+ 
+- Factors
+  
+- Metrics
 
 ## Technologies
 |Property|Description|
