@@ -1,6 +1,7 @@
 package util;
 
 import DTOs.*;
+import com.mongodb.MongoException;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.bulk.BulkWriteUpsert;
 import com.mongodb.client.MongoCollection;
@@ -10,6 +11,7 @@ import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -126,6 +128,7 @@ public class Queries {
     */
     public static List<Document> getLatest(QMLevel QMLevel, String projectId, String parent) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
         Bson parentQuery = getLatestParentQueryBuilder(parent, QMLevel);
 
@@ -171,6 +174,7 @@ public class Queries {
     */
     public static List<Document> getLatestElement(String projectId, QMLevel QMLevel, String elementId) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
         String group = getIDtoGroup(QMLevel);
 
@@ -314,6 +318,7 @@ public class Queries {
     */
     public static List<Document> getRanged(QMLevel QMLevel, String projectId , String parent, LocalDate dateFrom, LocalDate dateTo) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
 
         List<Bson> pipeline = Arrays.asList(
@@ -362,6 +367,7 @@ public class Queries {
     */
     public static List<Document> getRangedElement(String projectId, QMLevel QMLevel, String elementId, LocalDate from, LocalDate to) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
         String group = getIDtoGroup(QMLevel);
 
@@ -397,6 +403,7 @@ public class Queries {
     */
     public static List<Document> getRelations(LocalDate dateFrom, LocalDate dateTo, String projectId) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getRelationsIndex(projectId));
         MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
 
         List<Bson> pipeline = Arrays.asList(
@@ -420,6 +427,7 @@ public class Queries {
     */
     public static List<Document> getLatestRelationsDate(String projectId) {
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getRelationsIndex(projectId));
         MongoCollection<Document> collection = database.getCollection( getRelationsIndex(projectId) );
 
         List<Bson> pipeline = Arrays.asList(
@@ -452,6 +460,7 @@ public class Queries {
                                                           long datesMismatch) {
 
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
         Document updateDoc;
 
@@ -521,6 +530,7 @@ public class Queries {
                                                List<String> indicators) {
 
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(getIndex(projectId, QMLevel));
         MongoCollection<Document> collection = database.getCollection( getIndex(projectId, QMLevel) );
         Document updateDoc;
 
@@ -581,13 +591,14 @@ public class Queries {
     public static UpdateResult setFactorStrategicIndicatorRelation(FactorEvaluationDTO factor) {
         MongoDatabase database = Connection.getMongoDatabase();
         String indexName = getIndex( factor.getProject(), QMLevel.factors );
+        collectionExists(indexName);
         MongoCollection<Document> collection = database.getCollection(indexName);
 
         UpdateResult response = null;
         int index = 0;
 
         if (!factor.getEvaluations().isEmpty()) {
-            for (EvaluationDTO eval : factor.getEvaluations()) {
+            for (EvaluationDTO ignored : factor.getEvaluations()) {
                 String factorID = factor.getFactorEntryID(index++);
                 Document updateDoc = new Document("$set", new Document()
                     .append(ARRAY_STRATEGIC_INDICATORS, factor.getStrategicIndicators()));
@@ -608,13 +619,14 @@ public class Queries {
     public static UpdateResult setMetricQualityFactorRelation(MetricEvaluationDTO metric) {
         String indexName = getIndex(metric.getProject(), QMLevel.metrics);
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(indexName);
         MongoCollection<Document> collection = database.getCollection(indexName);
 
         UpdateResult response = null;
         int index = 0;
 
         if (!metric.getEvaluations().isEmpty()) {
-            for (EvaluationDTO eval : metric.getEvaluations()) {
+            for (EvaluationDTO ignored : metric.getEvaluations()) {
                 String metricID = metric.getMetricEntryID(index++);
                 Document updateDoc = new Document("$set", new Document()
                     .append(ARRAY_FACTORS, metric.getFactors()));
@@ -641,6 +653,7 @@ public class Queries {
         List<WriteModel<Document>> writes = new ArrayList<>();
         String indexName = getRelationsIndex(projectID);
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(indexName);
         MongoCollection<Document> collection = database.getCollection(indexName);
 
         for (int i = 0; i < factorID.length; i++) {
@@ -681,6 +694,7 @@ public class Queries {
         List<WriteModel<Document>> writes = new ArrayList<>();
         String indexName = getRelationsIndex(projectID);
         MongoDatabase database = Connection.getMongoDatabase();
+        collectionExists(indexName);
         MongoCollection<Document> collection = database.getCollection(indexName);
 
         for (int i = 0; i < metricID.length; i++) {
@@ -759,6 +773,13 @@ public class Queries {
         return collectionNames;
     }
 
+    private static void collectionExists(String collectionName) throws MongoException {
+        MongoDatabase database = Connection.getMongoDatabase();
+        List<String> collections = database.listCollectionNames().into(new ArrayList<>());
+        if (!collections.contains(collectionName))
+            throw new MongoException("Collection '" + collectionName + "' does not exist");
+    }
+
     /**
     * Get the existing relations' (Metric -> Factor) documents in a provided date.
     *
@@ -770,6 +791,7 @@ public class Queries {
 	public static List<Document> getFactorMetricsRelations(String projectId, String evaluationDate) {
         MongoDatabase database = Connection.getMongoDatabase();
         String indexName = INDEX_RELATIONS + "." + projectId;
+        collectionExists(indexName);
         MongoCollection<Document> collection = database.getCollection(indexName);
 
         List<Bson> pipeline = Arrays.asList(
@@ -800,16 +822,22 @@ public class Queries {
             return false;
         }
 
-        ValidationOptions validationOptions = new ValidationOptions().validator(STRATEGIC_INDICATORS_MAPPING);
-        CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
-        database.createCollection(collectionName, options);
+        try {
+            ValidationOptions validationOptions = new ValidationOptions().validator(STRATEGIC_INDICATORS_MAPPING);
+            CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
+            database.createCollection(collectionName, options);
+        } catch (MongoException e) {
+            e.printStackTrace();
+            System.out.println("INDEX COULD NOT BE CREATED: " + collectionName);
+            return false;
+        }
 
         for (String name : database.listCollectionNames())
             if (name.equals(collectionName)) {
                 System.out.println("INDEX CREATED: " + collectionName);
                 return true;
             }
-        System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+        System.out.println("INDEX COULD NOT BE CREATED: " + collectionName);
         return false;
     }
 
@@ -829,16 +857,22 @@ public class Queries {
             return false;
         }
 
-        ValidationOptions validationOptions = new ValidationOptions().validator(FACTORS_MAPPING);
-        CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
-        database.createCollection(collectionName, options);
+        try {
+            ValidationOptions validationOptions = new ValidationOptions().validator(FACTORS_MAPPING);
+            CreateCollectionOptions options = new CreateCollectionOptions().validationOptions(validationOptions);
+            database.createCollection(collectionName, options);
+        } catch (MongoException e) {
+            e.printStackTrace();
+            System.out.println("INDEX COULD NOT BE CREATED: " + collectionName);
+            return false;
+        }
 
         for (String name : database.listCollectionNames())
             if (name.equals(collectionName)) {
                 System.out.println("INDEX CREATED: " + collectionName);
                 return true;
             }
-        System.out.println("INDEX ALREADY EXISTS: " + collectionName);
+        System.out.println("INDEX COULD NOT BE CREATED: " + collectionName);
         return false;
     }
 
