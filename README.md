@@ -30,6 +30,10 @@ gradlew jar
 ```
 After the build is done the JAR file can be found at the __build/libs__ directory
 
+## Documentation
+
+You can find the technical documentation of the API [here](https://learning-dashboard.github.io/LD-qma-mongo/).
+
 ## Licensing
 Software licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
  
