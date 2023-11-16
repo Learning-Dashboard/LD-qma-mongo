@@ -25,6 +25,7 @@ public class Connection {
     *
     * @param ip IP where MongoDB is available. [MANDATORY]
     * @param port PORT where the MongoDB services are available. [MANDATORY]
+    * @param databaseName DATABASE name where all the operations are going to be performed. [MANDATORY]
     * @param username Credentials when MongoDB requires them. [OPTIONAL]
     * @param password Credentials when MongoDB requires them. [OPTIONAL]
     */

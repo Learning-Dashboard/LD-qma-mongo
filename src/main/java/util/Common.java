@@ -14,7 +14,7 @@ public class Common {
     //but are separated as in the future there can be changes in the DTOs that require specific processing
 
     /**
-    * Create a list of MetricEvaluationDTO from a List<Document>,
+    * Create a list of MetricEvaluationDTO from a List of Document,
     * containing metrics' evaluations.
     *
     * @param result The Document list containing the metrics' evaluations.
@@ -57,7 +57,7 @@ public class Common {
     }
 
     /**
-    * Create a list of FactorEvaluationDTO from a List<Document>,
+    * Create a list of FactorEvaluationDTO from a List of Document,
     * containing factors' evaluations.
     *
     * @param result The Document list containing the factors' evaluations.
@@ -105,7 +105,7 @@ public class Common {
     }
 
     /**
-    * Create a list of StrategicIndicatorEvaluationDTO from a List<Document>,
+    * Create a list of StrategicIndicatorEvaluationDTO from a List of Document,
     * containing strategic indicators' evaluations.
     *
     * @param result The Document list containing the strategic indicators' evaluations.
@@ -185,7 +185,7 @@ public class Common {
     * @param projectId The ID of the project.
     * @param QMLevel The QMLevel (metrics, factors or strategic_indicators).
     *
-    * @return A Map of <ID, name> of the existing entities, for the given project and QMLevel.
+    * @return A Map of ID,name of the existing entities, for the given project and QMLevel.
     */
     public static Map<String, String> getIDNames(String projectId, Constants.QMLevel QMLevel) {
         Map<String, String> IDNames = new HashMap<>();

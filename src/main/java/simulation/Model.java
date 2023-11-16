@@ -30,7 +30,7 @@ public class Model {
 	Set<String> changeFactors = new HashSet<>();
 
 	/**
-	* Create Model on metrics / factors (DTOs), and relations List<Document> (qr-eval).
+	* Create Model on metrics / factors (DTOs), and relations List of Document (LD-eval).
 	* Assumption: MetricEvaluationDTOs and FactorEvaluationDTOs contain exactly
  	* one EvaluationDTO for a specific evaluationDate.
 	*
